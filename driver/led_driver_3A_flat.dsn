@@ -1,0 +1,375 @@
+(PCB "O:/Projects/Hardware/Flashlight/driver/led_driver_3A_flat.brd"
+  (parser
+    (string_quote ")
+    (space_in_quoted_tokens on)
+    (host_cad CadSoft)
+    (host_version 'EAGLE Version 6.4.0 Copyright (c) 1988-2013 CadSoft')
+  )
+  (resolution mm 10000)
+  (unit mm)
+  (structure
+    (layer "1#Top"  (type signal))
+    (layer "16#Bottom"  (type signal))
+    (boundary 
+      (rect pcb  0.000000 0.000000 37.000000 19.500000)
+    )
+    (boundary (path signal 0 0.000000 0.000000 37.000000 0.000000))
+    (boundary (path signal 0 37.000000 0.000000 37.000000 19.500000))
+    (boundary (path signal 0 37.000000 19.500000 0.000000 19.500000))
+    (boundary (path signal 0 0.000000 19.500000 0.000000 0.000000))
+    (via
+       "Round1$0.304797"
+    )
+    (rule (width 0.152400)(clearance 0.152400))
+    (control
+      (via_at_smd on)
+    )
+  )
+  (placement
+    (place_control (flip_style rotate_first))
+    (component "2,15/1,0$wirepad" 
+      (place "+" 2.000000 2.000000 Front 0.000000)
+    )
+    (component "2,15/1,0$wirepad" 
+      (place "-" 2.000000 17.500000 Front 180.000000)
+    )
+    (component "C0402$resistor" 
+      (place "C1" 13.425000 3.775000 Front 270.000000)
+    )
+    (component "SMC_D$resistor" 
+      (place "C2" 4.875000 9.125000 Front 180.000000)
+    )
+    (component "C0402$resistor" 
+      (place "C3" 12.250000 8.625000 Front 270.000000)
+    )
+    (component "C0805$resistor" 
+      (place "C4" 15.250000 16.000000 Front 0.000000)
+    )
+    (component "C2220K$resistor" 
+      (place "C6" 32.625000 9.875000 Front 270.000000)
+    )
+    (component "C1206$resistor" 
+      (place "C7" 23.400000 9.995000 Front 90.000000)
+    )
+    (component "C0603$resistor" 
+      (place "C8" 23.525000 6.007000 Front 270.000000)
+    )
+    (component "C0402$resistor" 
+      (place "C9" 17.775000 3.150000 Front 180.000000)
+    )
+    (component "SMC_D$resistor" 
+      (place "C10" 4.875000 6.000000 Front 180.000000)
+    )
+    (component "C1206$resistor" 
+      (place "C11" 20.635000 14.485000 Front 0.000000)
+    )
+    (component "SOT23-6$zetex" 
+      (place "D1" 25.850000 7.260000 Front 0.000000)
+    )
+    (component "2,15/1,0$wirepad" 
+      (place "IN+" 32.625000 15.000000 Front 0.000000)
+    )
+    (component "2,15/1,0$wirepad" 
+      (place "IN-" 32.625000 4.500000 Front 0.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R1" 17.775000 4.450000 Front 0.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R3" 11.000000 14.875000 Front 90.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R4" 11.000000 8.625000 Front 90.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R5" 12.250000 11.750000 Front 90.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R6" 12.250000 14.875000 Front 90.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R10" 12.125000 3.775000 Front 270.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R11" 14.750000 14.375000 Front 180.000000)
+    )
+    (component "R0402$resistor" 
+      (place "R13" 15.325000 3.725000 Front 270.000000)
+    )
+    (component "TSSOP-28$vsd_custom" 
+      (place "U$1" 17.625000 10.025000 Front 270.000000)
+    )
+    (component "PG0077$vsd_custom" 
+      (place "U$2" 8.175000 9.800000 Back 0.000000)
+    )
+    (component "BSZ090X$vsd_custom" 
+      (place "U$3" 20.925000 3.675000 Front 270.000000)
+    )
+    (component "BSZ090X$vsd_custom" 
+      (place "U$4" 25.525000 14.150000 Front 0.000000)
+    )
+    (component "LVK20$vsd_custom" 
+      (place "U$5" 8.525000 14.175000 Front 270.000000)
+    )
+  )
+  (library
+    (image "C0402$resistor"
+      (place_keepout(path "1#Top" 0 -1.473000 -0.483000 -1.473000 0.483000 1.473000 0.483000 1.473000 -0.483000 ))
+      (pin "Rectangle1" "1" -0.650000 0.000000)
+      (pin "Rectangle1" "2" 0.650000 0.000000)
+    )
+    (image "C0603$resistor"
+      (place_keepout(path "1#Top" 0 -1.473000 -0.983000 -1.473000 0.983000 1.473000 0.983000 1.473000 -0.983000 ))
+      (pin "Rectangle2" "1" -0.850000 0.000000)
+      (pin "Rectangle2" "2" 0.850000 0.000000)
+    )
+    (image "C0805$resistor"
+      (place_keepout(path "1#Top" 0 1.973000 0.983000 1.973000 -0.983000 -1.973000 -0.983000 -1.973000 0.983000 ))
+      (pin "Rectangle3" "1" -0.850000 0.000000)
+      (pin "Rectangle3" "2" 0.850000 0.000000)
+    )
+    (image "C1206$resistor"
+      (place_keepout(path "1#Top" 0 2.473000 0.983000 2.473000 -0.983000 -2.473000 -0.983000 -2.473000 0.983000 ))
+      (pin "Rectangle4" "1" -1.400000 0.000000)
+      (pin "Rectangle4" "2" 1.400000 0.000000)
+    )
+    (image "C2220K$resistor"
+      (pin "Rectangle5" "1" -2.550000 0.000000)
+      (pin "Rectangle5" "2" 2.550000 0.000000)
+    )
+    (image "R0402$resistor"
+      (place_keepout(path "1#Top" 0 -1.473000 -0.483000 -1.473000 0.483000 1.473000 0.483000 1.473000 -0.483000 ))
+      (pin "Rectangle1" "1" -0.650000 0.000000)
+      (pin "Rectangle1" "2" 0.650000 0.000000)
+    )
+    (image "SMC_D$resistor"
+      (pin "Rectangle6" "+" -3.150000 0.000000)
+      (pin "Rectangle7" "-" 3.150000 0.000000)
+    )
+    (image "BSZ090X$vsd_custom"
+      (pin "Rectangle8" "D" 0.440000 0.000000)
+      (pin "Rectangle9" "D@1" 1.650000 -0.975000)
+      (pin "Rectangle9" "D@2" 1.650000 -0.325000)
+      (pin "Rectangle9" "D@3" 1.650000 0.325000)
+      (pin "Rectangle9" "D@4" 1.650000 0.975000)
+      (pin "Rectangle9" "G" -1.650000 -0.975000)
+      (pin "Rectangle10" "S@1" -1.250000 0.325000)
+      (pin "Rectangle9" "S@2" -1.650000 -0.325000)
+      (pin "Rectangle9" "S@3" -1.650000 0.325000)
+      (pin "Rectangle9" "S@4" -1.650000 0.975000)
+    )
+    (image "LVK20$vsd_custom"
+      (pin "Rectangle11" "I1" -1.975000 -1.025000)
+      (pin "Rectangle11" "I2" 1.975000 -1.025000)
+      (pin "Rectangle11" "V1" -1.975000 1.025000)
+      (pin "Rectangle11" "V2" 1.975000 1.025000)
+    )
+    (image "PG0077$vsd_custom"
+      (pin "Rectangle12" "P$1" -5.575000 0.000000)
+      (pin "Rectangle12" "P$2" 5.275000 0.000000)
+    )
+    (image "TSSOP-28$vsd_custom"
+      (outline(circ "1#Top" 0.417250 -1.745000 4.255000))
+      (pin "Rectangle13" "P$1" -2.775000 4.225000)
+      (pin "Rectangle13" "P$2" -2.775000 3.575000)
+      (pin "Rectangle13" "P$3" -2.775000 2.925000)
+      (pin "Rectangle13" "P$4" -2.775000 2.275000)
+      (pin "Rectangle13" "P$5" -2.775000 1.625000)
+      (pin "Rectangle13" "P$6" -2.775000 0.975000)
+      (pin "Rectangle13" "P$7" -2.775000 0.325000)
+      (pin "Rectangle13" "P$8" -2.775000 -0.325000)
+      (pin "Rectangle13" "P$9" -2.775000 -0.975000)
+      (pin "Rectangle13" "P$10" -2.775000 -1.625000)
+      (pin "Rectangle13" "P$11" -2.775000 -2.275000)
+      (pin "Rectangle13" "P$12" -2.775000 -2.925000)
+      (pin "Rectangle13" "P$13" -2.775000 -3.575000)
+      (pin "Rectangle13" "P$14" -2.775000 -4.225000)
+      (pin "Rectangle14" "P$15" 2.775000 -4.225000)
+      (pin "Rectangle14" "P$16" 2.775000 -3.575000)
+      (pin "Rectangle14" "P$17" 2.775000 -2.925000)
+      (pin "Rectangle14" "P$18" 2.775000 -2.275000)
+      (pin "Rectangle14" "P$19" 2.775000 -1.625000)
+      (pin "Rectangle14" "P$20" 2.775000 -0.975000)
+      (pin "Rectangle14" "P$21" 2.775000 -0.325000)
+      (pin "Rectangle14" "P$22" 2.775000 0.325000)
+      (pin "Rectangle14" "P$23" 2.775000 0.975000)
+      (pin "Rectangle14" "P$24" 2.775000 1.625000)
+      (pin "Rectangle14" "P$25" 2.775000 2.275000)
+      (pin "Rectangle14" "P$26" 2.775000 2.925000)
+      (pin "Rectangle14" "P$27" 2.775000 3.575000)
+      (pin "Rectangle14" "P$28" 2.775000 4.225000)
+      (pin "Rectangle15" "TH" 0.000000 0.000000)
+    )
+    (image "2,15/1,0$wirepad"
+      (pin "Octagon1" "1" 0.000000 0.000000)
+    )
+    (image "SOT23-6$zetex"
+      (outline(circ "1#Top" 0.200000 -1.150000 -0.500000))
+      (pin "Rectangle16" "1" -0.950000 -1.150000)
+      (pin "Rectangle16" "2" 0.000000 -1.150000)
+      (pin "Rectangle16" "3" 0.950000 -1.150000)
+      (pin "Rectangle16" "4" 0.950000 1.150000)
+      (pin "Rectangle16" "5" 0.000000 1.150000)
+      (pin "Rectangle16" "6" -0.950000 1.150000)
+    )
+    (padstack "ViaDefault$0.304800"
+      (shape (circle signal 0.609600 0 0))
+    )
+    (padstack "Round1$0.304797" 
+      (shape (circle "1#Top" 0.609597 0 0))
+      (shape (circle "16#Bottom" 0.609597 0 0))
+      (attach off)
+    )
+    (padstack "Rectangle1" 
+      (shape (rect "1#Top" -0.350000 -0.450000 0.350000 0.450000))
+      (attach off)
+    )
+    (padstack "Rectangle2" 
+      (shape (rect "1#Top" -0.550000 -0.500000 0.550000 0.500000))
+      (attach off)
+    )
+    (padstack "Rectangle3" 
+      (shape (rect "1#Top" -0.650000 -0.750000 0.650000 0.750000))
+      (attach off)
+    )
+    (padstack "Rectangle4" 
+      (shape (rect "1#Top" -0.800000 -0.900000 0.800000 0.900000))
+      (attach off)
+    )
+    (padstack "Rectangle5" 
+      (shape (rect "1#Top" -0.925000 -2.750000 0.925000 2.750000))
+      (attach off)
+    )
+    (padstack "Rectangle6" 
+      (shape (rect "1#Top" -1.200000 -1.400000 1.200000 1.400000))
+      (attach off)
+    )
+    (padstack "Rectangle7" 
+      (shape (rect "1#Top" -1.200000 -1.400000 1.200000 1.400000))
+      (attach off)
+    )
+    (padstack "Rectangle8" 
+      (shape (rect "1#Top" -0.900000 -1.150000 0.900000 1.150000))
+      (attach off)
+    )
+    (padstack "Rectangle9" 
+      (shape (rect "1#Top" -0.500000 -0.175000 0.500000 0.175000))
+      (attach off)
+    )
+    (padstack "Rectangle10" 
+      (shape (rect "1#Top" -0.200000 -0.825000 0.200000 0.825000))
+      (attach off)
+    )
+    (padstack "Rectangle11" 
+      (shape (rect "1#Top" -1.275000 -0.775000 1.275000 0.775000))
+      (attach off)
+    )
+    (padstack "Rectangle12" 
+      (shape (rect "1#Top" -2.500000 -2.600000 2.500000 2.600000))
+      (attach off)
+    )
+    (padstack "Rectangle13" 
+      (shape (rect "1#Top" -0.525000 -0.225000 0.525000 0.225000))
+      (attach off)
+    )
+    (padstack "Rectangle14" 
+      (shape (rect "1#Top" -0.525000 -0.225000 0.525000 0.225000))
+      (attach off)
+    )
+    (padstack "Rectangle15" 
+      (shape (rect "1#Top" -1.370000 -2.375000 1.370000 2.375000))
+      (attach off)
+    )
+    (padstack "Octagon1" 
+      (shape (polygon "1#Top" 0 1.079500 0.447143 0.447143 1.079500 -0.447143 1.079500 -1.079500 0.447143 -1.079500 -0.447143 -0.447143 -1.079500 0.447143 -1.079500 1.079500 -0.447143 ))
+      (shape (polygon "16#Bottom" 0 1.079500 0.447143 0.447143 1.079500 -0.447143 1.079500 -1.079500 0.447143 -1.079500 -0.447143 -0.447143 -1.079500 0.447143 -1.079500 1.079500 -0.447143 ))
+      (attach off)
+    )
+    (padstack "Rectangle16" 
+      (shape (rect "1#Top" -0.300000 -0.450000 0.300000 0.450000))
+      (attach off)
+    )
+  )
+  (network
+    (net "GND"
+      (pins  "C10"-"-" "C2"-"-" "U$1"-"P$12" "R1"-"2" "U$1"-"P$23" "U$1"-"P$28" "U$1"-"TH" "C1"-"2" "C4"-"1" "C9"-"1" "R11"-"2" "C11"-"2" "C7"-"1" "C6"-"2" "U$4"-"S@1" "U$4"-"S@2" "U$4"-"S@3" "U$4"-"S@4" "R5"-"1" "-"-"1" "IN-"-"1")
+    )
+    (net "N$2"
+      (pins  "U$1"-"P$2" "C7"-"2" "D1"-"3" "D1"-"4" "U$1"-"P$22")
+    )
+    (net "N$3"
+      (pins  "R13"-"2" "C9"-"2")
+    )
+    (net "N$4"
+      (pins  "U$1"-"P$10" "C4"-"2" "U$1"-"P$14" "U$1"-"P$5" "R6"-"2")
+    )
+    (net "N$5"
+      (pins  "C2"-"+" "C10"-"+" "R10"-"2" "U$5"-"I2" "+"-"1")
+    )
+    (net "N$6"
+      (pins  "U$1"-"P$20" "R1"-"1")
+    )
+    (net "N$7"
+      (pins  "U$1"-"P$11" "R11"-"1" "R10"-"1")
+    )
+    (net "N$8"
+      (pins  "U$1"-"P$15" "C1"-"1")
+    )
+    (net "N$9"
+      (pins  "U$1"-"P$18" "R13"-"1")
+    )
+    (net "N$12"
+      (pins  "U$1"-"P$27" "D1"-"6" "D1"-"5" "D1"-"2" "D1"-"1" "C8"-"1")
+    )
+    (net "N$13"
+      (pins  "U$1"-"P$26" "C8"-"2" "U$3"-"S@1" "U$2"-"P$1" "U$4"-"D" "U$3"-"S@2" "U$3"-"S@3" "U$3"-"S@4" "U$4"-"D@1" "U$4"-"D@2" "U$4"-"D@3" "U$4"-"D@4")
+    )
+    (net "N$14"
+      (pins  "U$5"-"V2" "R4"-"2")
+    )
+    (net "N$15"
+      (pins  "U$1"-"P$25" "U$3"-"G")
+    )
+    (net "N$16"
+      (pins  "U$1"-"P$1" "U$4"-"G")
+    )
+    (net "N$17"
+      (pins  "U$1"-"P$17" "C3"-"1" "R3"-"1")
+    )
+    (net "N$18"
+      (pins  "U$1"-"P$16" "C3"-"2" "R4"-"1")
+    )
+    (net "N$19"
+      (pins  "U$2"-"P$2" "U$5"-"I1")
+    )
+    (net "N$20"
+      (pins  "U$5"-"V1" "R3"-"2")
+    )
+    (net "N$21"
+      (pins  "R6"-"1" "R5"-"2" "U$1"-"P$13")
+    )
+    (net "VIN"
+      (pins  "C6"-"1" "U$1"-"P$4" "U$1"-"P$7" "U$1"-"P$6" "U$3"-"D" "U$3"-"D@1" "U$3"-"D@2" "U$3"-"D@3" "U$3"-"D@4" "U$1"-"P$3" "C11"-"1" "IN+"-"1")
+    )
+    (class "default"
+       "N$3" "N$4" "N$7" "N$8" "N$21"
+      (rule
+        (width 0.304800)
+      )
+    )
+    (class "AVG_PWR"
+       "N$13" "N$15" "N$16"
+      (rule
+        (width 0.381000)
+      )
+    )
+    (class "HI_PWR"
+       "GND" "N$2" "N$5" "N$6" "N$9" "N$12" "N$14" "N$17" "N$18" "N$19" "N$20" "VIN"
+      (rule
+        (width 0.457200)
+      )
+    )
+  )
+  (wiring
+  )
+)

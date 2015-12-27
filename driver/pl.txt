@@ -1,0 +1,21 @@
+C9       4.7n           C0402        1,C1005X7R1H472M050BA
+C1       10n            C0402        1,C1005X7R1E103K050BB 
+C3       33n            C0402        1,C1005X7R1H333M050BB 
+C11      1uF            C1206        1,C3216X7R1E105M085AA
+C4       2.2uF          C0805        1,C2012JB1A225K085AA 
+C7       4.7uF          C1206        1,C3216X5R1E475K160AA 
+C6       10uF           C2220K       1,C5750X7R1E106M200KA 
+C2,C10   220uF          SMC_D        2,T530D227M010ATE006 
+C8       220nF          C0603        1,C1608X5R1H224K080AB 
+D1       ZHCS2000       SOT23-6      1,ZLLS2000TA 
+R3,R4    10Ohm          R0402        2,ERJ-2RKF10R0X 
+R6,R10,R13 54.9k        R0402        3,ERJ-2RKF5492X 
+R1       82k            R0402        1,RG1005P-823-B-T5 
+R5       110k           R0402        1,MCR01MRTF1103 
+U$1      LT3763         TSSOP-28     1,LT3763HFE#PBF 
+U$2      PG0077         PG0077       1,PG0077.202NLT 
+U$3      BSZ0901NSI     BSZ090X      1,BSZ0901NSI 
+U$4      BSZ0904NSI     BSZ090X      1,BSZ0904NSI 
+U$5      LVK20          LVK20        1,LVK20R015FER 
+
+
