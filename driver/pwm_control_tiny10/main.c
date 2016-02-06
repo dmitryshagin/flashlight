@@ -69,6 +69,8 @@ int main(void){
 				OCR0B = LED_100_PERCENT;
 			}
 			to_apply = 0;
+			ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADIE);	// enable ADC on 1mhz/16 with interrupt
+			ADCSRA |= (1<<ADSC);							//start conversion
 		}
 		
 	}
