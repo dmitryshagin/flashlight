@@ -10353,12 +10353,14 @@ tested: YES (etherbotix)</description>
 <part name="GND10" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="BTN1" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="1,6/0,9" device="" package3d_urn="urn:adsk.eagle:package:30840/1" value="BTN1"/>
 <part name="CLONE2" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="VDD" device=""/>
-<part name="C4" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:26138/1" value="100n"/>
+<part name="C4" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:26136/1" value="100n"/>
 <part name="GND11" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
-<part name="C5" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:26138/1" value="100n"/>
+<part name="C5" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:26136/1" value="100n"/>
 <part name="GND13" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="T1" library="transistor-neu-to92" library_urn="urn:adsk.eagle:library:397" deviceset="BC848" device="" package3d_urn="urn:adsk.eagle:package:28738/1"/>
-<part name="T2" library="transistor-neu-to92" library_urn="urn:adsk.eagle:library:397" deviceset="BC848" device="" package3d_urn="urn:adsk.eagle:package:28738/1"/>
+<part name="T2" library="transistor-neu-to92" library_urn="urn:adsk.eagle:library:397" deviceset="BC848" device="" package3d_urn="urn:adsk.eagle:package:28738/1">
+<attribute name="SPICEPREFIX" value="Q"/>
+</part>
 <part name="R8" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/1" value="470k"/>
 <part name="R9" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/1" value="2.2k"/>
 <part name="R10" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/1" value="100k"/>
@@ -10439,7 +10441,7 @@ tested: YES (etherbotix)</description>
 <text x="0" y="198.12" size="1.778" layer="91">Вход с МК - включение измерителя</text>
 <text x="2.54" y="220.98" size="1.778" layer="91">Выход на МК - можно без прерывания</text>
 <text x="91.44" y="218.44" size="1.778" layer="91">вход с платы (ответный электрод на воду)</text>
-<text x="251.46" y="142.24" size="1.778" layer="91">к выходу основного транзистора
+<text x="292.1" y="139.7" size="1.778" layer="91">к выходу основного транзистора
 для детекции подключения
 внешнего источника питания</text>
 <text x="220.98" y="182.88" size="1.778" layer="91">К МК - на прерывание INT1</text>
