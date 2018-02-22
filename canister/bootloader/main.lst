@@ -1,0 +1,1589 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+ 116               	sendchar:
+   1:main.c        **** /*****************************************************************************
+   2:main.c        **** *
+   3:main.c        **** * AVRPROG compatible boot-loader
+   4:main.c        **** * Version  : 0.85 (Dec. 2008)
+   5:main.c        **** * Compiler : avr-gcc 4.1.2 / avr-libc 1.4.6
+   6:main.c        **** * size     : depends on features and startup ( minmal features < 512 words)
+   7:main.c        **** * by       : Martin Thomas, Kaiserslautern, Germany
+   8:main.c        **** *            eversmith@heizung-thomas.de
+   9:main.c        **** *            Additional code and improvements contributed by:
+  10:main.c        **** *           - Uwe Bonnes
+  11:main.c        **** *           - Bjoern Riemer
+  12:main.c        **** *           - Olaf Rempel
+  13:main.c        **** *
+  14:main.c        **** * License  : Copyright (c) 2006-2008 M. Thomas, U. Bonnes, O. Rempel
+  15:main.c        **** *            Free to use. You have to mention the copyright
+  16:main.c        **** *            owners in source-code and documentation of derived
+  17:main.c        **** *            work. No warranty! (Yes, you can insert the BSD
+  18:main.c        **** *            license here)
+  19:main.c        **** *
+  20:main.c        **** * Tested with ATmega8, ATmega16, ATmega162, ATmega32, ATmega324P,
+  21:main.c        **** *             ATmega644, ATmega644P, ATmega128, AT90CAN128
+  22:main.c        **** *
+  23:main.c        **** * - Initial versions have been based on the Butterfly bootloader-code
+  24:main.c        **** *   by Atmel Corporation (Authors: BBrandal, PKastnes, ARodland, LHM)
+  25:main.c        **** *
+  26:main.c        **** ****************************************************************************
+  27:main.c        **** *
+  28:main.c        **** *  See the makefile and readme.txt for information on how to adapt 
+  29:main.c        **** *  the linker-settings to the selected Boot Size (BOOTSIZE=xxxx) and 
+  30:main.c        **** *  the MCU-type. Other configurations futher down in this file.
+  31:main.c        **** *
+  32:main.c        **** *  With BOOT_SIMPLE, minimal features and discarded int-vectors
+  33:main.c        **** *  this bootloader has should fit into a a 512 word (1024, 0x400 bytes) 
+  34:main.c        **** *  bootloader-section. 
+  35:main.c        **** *
+  36:main.c        **** ****************************************************************************/
+  37:main.c        **** 
+  38:main.c        **** /* Частота контроллера (кварца) */
+  39:main.c        **** #define F_CPU 3686400UL
+  40:main.c        **** 
+  41:main.c        **** //TODO: TURN ON BT
+  42:main.c        **** 
+  43:main.c        **** #define BAUDRATE 38400UL
+  44:main.c        **** 
+  45:main.c        **** 
+  46:main.c        **** #define DEVTYPE     DEVTYPE_BOOT
+  47:main.c        **** 
+  48:main.c        **** /*
+  49:main.c        ****  * Выбор порта для кнопки входа в загрузчик
+  50:main.c        ****  * Чтобы войти в загрузчик надо чтобы при запуске эта к�
+  51:main.c        ****  */
+  52:main.c        **** #define BLPORT		PORTD
+  53:main.c        **** #define BLDDR		DDRD
+  54:main.c        **** #define BLPIN		PIND
+  55:main.c        **** #define BLPNUM		PIND2
+  56:main.c        **** 
+  57:main.c        **** 
+  58:main.c        **** #define PWRPORT		PORTD
+  59:main.c        **** #define PWRDDR		DDRD
+  60:main.c        **** #define PWRPNUM		PIND7
+  61:main.c        **** 
+  62:main.c        **** 
+  63:main.c        **** /*
+  64:main.c        ****  * GREEN LED on - we are in bootloader
+  65:main.c        ****  */
+  66:main.c        **** 
+  67:main.c        **** #define ENABLE_BOOT_LED
+  68:main.c        **** #define BIPORT		PORTD
+  69:main.c        **** #define BIDDR		DDRD
+  70:main.c        **** #define BIPIN		PIND
+  71:main.c        **** #define BIPNUM		PIND6
+  72:main.c        **** 
+  73:main.c        **** 
+  74:main.c        **** #define DISABLE_WDT_AT_STARTUP
+  75:main.c        **** 
+  76:main.c        **** /*
+  77:main.c        ****  * Watchdog-reset is issued at exit 
+  78:main.c        ****  * define the timeout-value here (see avr-libc manual)
+  79:main.c        ****  */
+  80:main.c        **** #define EXIT_WDT_TIME   WDTO_250MS
+  81:main.c        **** 
+  82:main.c        **** // #define START_SIMPLE
+  83:main.c        **** #define START_WAIT
+  84:main.c        **** //#define START_POWERSAVE
+  85:main.c        **** //#define START_BOOTICE
+  86:main.c        **** 
+  87:main.c        **** /* Команда для входа в загрузчик в START_WAIT */
+  88:main.c        **** #define START_WAIT_UARTCHAR 'S'
+  89:main.c        **** 
+  90:main.c        **** /* Выдержка для START_WAIT mode ( t = WAIT_TIME * 10ms ) */
+  91:main.c        **** #define WAIT_VALUE 800 /* 800*10ms = 8sec */
+  92:main.c        **** 
+  93:main.c        **** /*
+  94:main.c        ****  * enable/disable readout of fuse and lock-bits
+  95:main.c        ****  * (AVRPROG has to detect the AVR correctly by device-code
+  96:main.c        ****  * to show the correct information).
+  97:main.c        ****  */
+  98:main.c        **** //#define ENABLEREADFUSELOCK
+  99:main.c        **** 
+ 100:main.c        **** /* enable/disable write of lock-bits
+ 101:main.c        ****  * WARNING: lock-bits can not be reseted by bootloader (as far as I know)
+ 102:main.c        ****  * Only protection no unprotection, "chip erase" from bootloader only
+ 103:main.c        ****  * clears the flash but does no real "chip erase" (this is not possible
+ 104:main.c        ****  * with a bootloader as far as I know)
+ 105:main.c        ****  * Keep this undefined!
+ 106:main.c        ****  */
+ 107:main.c        **** //#define WRITELOCKBITS
+ 108:main.c        **** 
+ 109:main.c        **** /*
+ 110:main.c        ****  * define the following if the bootloader should not output
+ 111:main.c        ****  * itself at flash read (will fake an empty boot-section)
+ 112:main.c        ****  */
+ 113:main.c        **** //#define READ_PROTECT_BOOTLOADER 
+ 114:main.c        **** 
+ 115:main.c        **** #define VERSION_HIGH '0'
+ 116:main.c        **** #define VERSION_LOW  '8'
+ 117:main.c        **** 
+ 118:main.c        **** #define GET_LOCK_BITS           0x0001
+ 119:main.c        **** #define GET_LOW_FUSE_BITS       0x0000
+ 120:main.c        **** #define GET_HIGH_FUSE_BITS      0x0003
+ 121:main.c        **** #define GET_EXTENDED_FUSE_BITS  0x0002
+ 122:main.c        **** 
+ 123:main.c        **** /* Расчет делителя частоты для USART*/
+ 124:main.c        **** #ifdef UART_DOUBLESPEED
+ 125:main.c        **** 
+ 126:main.c        **** 	#define UART_CALC_BAUDRATE(baudRate) ((uint32_t)((F_CPU) + ((uint32_t)baudRate * 4UL)) / ((uint32_
+ 127:main.c        **** 
+ 128:main.c        **** #else
+ 129:main.c        **** 
+ 130:main.c        **** 	#define UART_CALC_BAUDRATE(baudRate) ((uint32_t)((F_CPU) + ((uint32_t)baudRate * 8UL)) / ((uint32_
+ 131:main.c        **** 
+ 132:main.c        **** #endif
+ 133:main.c        **** 
+ 134:main.c        **** 
+ 135:main.c        **** #include <stdint.h>
+ 136:main.c        **** #include <avr/io.h>
+ 137:main.c        **** #include <avr/wdt.h>
+ 138:main.c        **** #include <avr/boot.h>
+ 139:main.c        **** #include <avr/pgmspace.h>
+ 140:main.c        **** #include <avr/eeprom.h>
+ 141:main.c        **** #include <avr/interrupt.h>
+ 142:main.c        **** #include <util/delay.h>
+ 143:main.c        **** 
+ 144:main.c        **** #include "chipdef.h"
+ 145:main.c        **** 
+ 146:main.c        **** uint8_t gBuffer[SPM_PAGESIZE];
+ 147:main.c        **** 
+ 148:main.c        **** #if defined(BOOTLOADERHASNOVECTORS)
+ 149:main.c        **** 	#warning "This Bootloader does not link interrupt vectors - see makefile"
+ 150:main.c        **** 	/* make the linker happy - it wants to see __vector_default */
+ 151:main.c        **** 	// void __vector_default(void) { ; }
+ 152:main.c        **** 	void __vector_default(void) { ; }
+ 153:main.c        **** #endif
+ 154:main.c        **** 
+ 155:main.c        **** static void sendchar(uint8_t data)
+ 156:main.c        **** {
+ 118               	.LM0:
+ 119               	.LFBB1:
+ 120               	/* prologue: function */
+ 121               	/* frame size = 0 */
+ 122               	/* stack size = 0 */
+ 123               	.L__stack_usage = 0
+ 124               	.L3:
+ 157:main.c        **** 	while (!(UART_STATUS & (1<<UART_TXREADY)));
+ 126               	.LM1:
+ 127 0000 9091 C000 		lds r25,192
+ 128 0004 95FF      		sbrs r25,5
+ 129 0006 00C0      		rjmp .L3
+ 158:main.c        **** 	UART_DATA = data;
+ 131               	.LM2:
+ 132 0008 8093 C600 		sts 198,r24
+ 133 000c 0895      		ret
+ 135               	.Lscope1:
+ 138               	recvchar:
+ 159:main.c        **** }
+ 160:main.c        **** 
+ 161:main.c        **** static uint8_t recvchar(void)
+ 162:main.c        **** {
+ 140               	.LM3:
+ 141               	.LFBB2:
+ 142               	/* prologue: function */
+ 143               	/* frame size = 0 */
+ 144               	/* stack size = 0 */
+ 145               	.L__stack_usage = 0
+ 146               	.L7:
+ 163:main.c        **** 	while (!(UART_STATUS & (1<<UART_RXREADY)));
+ 148               	.LM4:
+ 149 000e 8091 C000 		lds r24,192
+ 150 0012 87FF      		sbrs r24,7
+ 151 0014 00C0      		rjmp .L7
+ 164:main.c        **** 	return UART_DATA;
+ 153               	.LM5:
+ 154 0016 8091 C600 		lds r24,198
+ 165:main.c        **** }
+ 156               	.LM6:
+ 157 001a 0895      		ret
+ 159               	.Lscope2:
+ 162               	send_boot:
+ 166:main.c        **** 
+ 167:main.c        **** static inline void eraseFlash(void)
+ 168:main.c        **** {
+ 169:main.c        **** 	// erase only main section (bootloader protection)
+ 170:main.c        **** 	uint32_t addr = 0;
+ 171:main.c        **** 	while (APP_END > addr) 
+ 172:main.c        **** 		{
+ 173:main.c        **** 		boot_page_erase(addr);		// Perform page erase
+ 174:main.c        **** 		boot_spm_busy_wait();		// Wait until the memory is erased.
+ 175:main.c        **** 		addr += SPM_PAGESIZE;
+ 176:main.c        **** 		}
+ 177:main.c        **** 	boot_rww_enable();
+ 178:main.c        **** }
+ 179:main.c        **** 
+ 180:main.c        **** static inline void recvBuffer(pagebuf_t size)
+ 181:main.c        **** {
+ 182:main.c        **** 	pagebuf_t cnt;
+ 183:main.c        **** 	uint8_t *tmp = gBuffer;
+ 184:main.c        **** 
+ 185:main.c        **** 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
+ 186:main.c        **** 		{
+ 187:main.c        **** 		*tmp++ = (cnt < size) ? recvchar() : 0xFF;
+ 188:main.c        **** 		}
+ 189:main.c        **** }
+ 190:main.c        **** 
+ 191:main.c        **** static inline uint16_t writeFlashPage(uint16_t waddr, pagebuf_t size)
+ 192:main.c        **** {
+ 193:main.c        **** 	uint32_t pagestart = (uint32_t)waddr<<1;
+ 194:main.c        **** 	uint32_t baddr = pagestart;
+ 195:main.c        **** 	uint16_t data;
+ 196:main.c        **** 	uint8_t *tmp = gBuffer;
+ 197:main.c        **** 
+ 198:main.c        **** 	do 
+ 199:main.c        **** 		{
+ 200:main.c        **** 		data = *tmp++;
+ 201:main.c        **** 		data |= *tmp++ << 8;
+ 202:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
+ 203:main.c        **** 
+ 204:main.c        **** 		baddr += 2;			// Select next word in memory
+ 205:main.c        **** 		size -= 2;			// Reduce number of bytes to write by two
+ 206:main.c        **** 		} 
+ 207:main.c        **** 	while (size);				// Loop until all bytes written
+ 208:main.c        **** 
+ 209:main.c        **** 	boot_page_write(pagestart);
+ 210:main.c        **** 	boot_spm_busy_wait();
+ 211:main.c        **** 	boot_rww_enable();		// Re-enable the RWW section
+ 212:main.c        **** 
+ 213:main.c        **** 	return baddr>>1;
+ 214:main.c        **** }
+ 215:main.c        **** 
+ 216:main.c        **** static inline uint16_t writeEEpromPage(uint16_t address, pagebuf_t size)
+ 217:main.c        **** {
+ 218:main.c        **** 	uint8_t *tmp = gBuffer;
+ 219:main.c        **** 
+ 220:main.c        **** 	do 
+ 221:main.c        **** 		{
+ 222:main.c        **** 		eeprom_write_byte( (uint8_t*)address, *tmp++ );
+ 223:main.c        **** 		address++;			// Select next byte
+ 224:main.c        **** 		size--;				// Decreas number of bytes to write
+ 225:main.c        **** 		}
+ 226:main.c        **** 	while (size);				// Loop until all bytes written
+ 227:main.c        **** 
+ 228:main.c        **** 	// eeprom_busy_wait();
+ 229:main.c        **** 
+ 230:main.c        **** 	return address;
+ 231:main.c        **** }
+ 232:main.c        **** 
+ 233:main.c        **** static inline uint16_t readFlashPage(uint16_t waddr, pagebuf_t size)
+ 234:main.c        **** {
+ 235:main.c        **** 	uint32_t baddr = (uint32_t)waddr<<1;
+ 236:main.c        **** 	uint16_t data;
+ 237:main.c        **** 
+ 238:main.c        **** 	do 
+ 239:main.c        **** 	{
+ 240:main.c        **** 
+ 241:main.c        **** #ifndef READ_PROTECT_BOOTLOADER
+ 242:main.c        **** 
+ 243:main.c        **** 	#if defined(RAMPZ)
+ 244:main.c        **** 		data = pgm_read_word_far(baddr);
+ 245:main.c        **** 	#else
+ 246:main.c        **** 		data = pgm_read_word_near(baddr);
+ 247:main.c        **** 	#endif
+ 248:main.c        **** 
+ 249:main.c        **** #else
+ 250:main.c        **** 		// don't read bootloader
+ 251:main.c        **** 		if ( baddr < APP_END ) 
+ 252:main.c        **** 		{
+ 253:main.c        **** 		#if defined(RAMPZ)
+ 254:main.c        **** 			data = pgm_read_word_far(baddr);
+ 255:main.c        **** 		#else
+ 256:main.c        **** 			data = pgm_read_word_near(baddr);
+ 257:main.c        **** 		#endif
+ 258:main.c        **** 		}
+ 259:main.c        **** 		else 
+ 260:main.c        **** 		{
+ 261:main.c        **** 		data = 0xFFFF; // fake empty
+ 262:main.c        **** 		}
+ 263:main.c        **** #endif
+ 264:main.c        **** 		sendchar(data);			// send LSB
+ 265:main.c        **** 		sendchar((data >> 8));		// send MSB
+ 266:main.c        **** 		baddr += 2;			// Select next word in memory
+ 267:main.c        **** 		size -= 2;			// Subtract two bytes from number of bytes to read
+ 268:main.c        **** 	} 
+ 269:main.c        **** 	while (size);				// Repeat until block has been read
+ 270:main.c        **** 	return baddr>>1;
+ 271:main.c        **** }
+ 272:main.c        **** 
+ 273:main.c        **** static inline uint16_t readEEpromPage(uint16_t address, pagebuf_t size)
+ 274:main.c        **** {
+ 275:main.c        **** 	do 
+ 276:main.c        **** 	{
+ 277:main.c        **** 	sendchar( eeprom_read_byte( (uint8_t*)address ) );
+ 278:main.c        **** 	address++;
+ 279:main.c        **** 	size--;				// Decrease number of bytes to read
+ 280:main.c        **** 	} 
+ 281:main.c        **** 	while (size);				// Repeat until block has been read
+ 282:main.c        **** 
+ 283:main.c        **** 	return address;
+ 284:main.c        **** }
+ 285:main.c        **** 
+ 286:main.c        **** #if defined(ENABLEREADFUSELOCK)
+ 287:main.c        **** static uint8_t read_fuse_lock(uint16_t addr)
+ 288:main.c        **** {
+ 289:main.c        **** 	uint8_t mode = (1<<BLBSET) | (1<<SPMEN);
+ 290:main.c        **** 	uint8_t retval;
+ 291:main.c        **** 
+ 292:main.c        **** 	asm volatile
+ 293:main.c        **** 	(
+ 294:main.c        **** 		"movw r30, %3\n\t"		/* Z to addr */ \
+ 295:main.c        **** 		"sts %0, %2\n\t"		/* set mode in SPM_REG */ \
+ 296:main.c        **** 		"lpm\n\t"			/* load fuse/lock value into r0 */ \
+ 297:main.c        **** 		"mov %1,r0\n\t"			/* save return value */ \
+ 298:main.c        **** 		: "=m" (SPM_REG),
+ 299:main.c        **** 		  "=r" (retval)
+ 300:main.c        **** 		: "r" (mode),
+ 301:main.c        **** 		  "r" (addr)
+ 302:main.c        **** 		: "r30", "r31", "r0"
+ 303:main.c        **** 	);
+ 304:main.c        **** 	return retval;
+ 305:main.c        **** }
+ 306:main.c        **** #endif
+ 307:main.c        **** 
+ 308:main.c        **** static void send_boot(void)
+ 309:main.c        **** {
+ 164               	.LM7:
+ 165               	.LFBB3:
+ 166               	/* prologue: function */
+ 167               	/* frame size = 0 */
+ 168               	/* stack size = 0 */
+ 169               	.L__stack_usage = 0
+ 310:main.c        **** 	sendchar('A');
+ 171               	.LM8:
+ 172 001c 81E4      		ldi r24,lo8(65)
+ 173 001e 0E94 0000 		call sendchar
+ 311:main.c        **** 	sendchar('V');
+ 175               	.LM9:
+ 176 0022 86E5      		ldi r24,lo8(86)
+ 177 0024 0E94 0000 		call sendchar
+ 312:main.c        **** 	sendchar('R');
+ 179               	.LM10:
+ 180 0028 82E5      		ldi r24,lo8(82)
+ 181 002a 0E94 0000 		call sendchar
+ 313:main.c        **** 	sendchar('B');
+ 183               	.LM11:
+ 184 002e 82E4      		ldi r24,lo8(66)
+ 185 0030 0E94 0000 		call sendchar
+ 314:main.c        **** 	sendchar('O');
+ 187               	.LM12:
+ 188 0034 8FE4      		ldi r24,lo8(79)
+ 189 0036 0E94 0000 		call sendchar
+ 315:main.c        **** 	sendchar('O');
+ 191               	.LM13:
+ 192 003a 8FE4      		ldi r24,lo8(79)
+ 193 003c 0E94 0000 		call sendchar
+ 316:main.c        **** 	sendchar('T');
+ 195               	.LM14:
+ 196 0040 84E5      		ldi r24,lo8(84)
+ 197 0042 0C94 0000 		jmp sendchar
+ 199               	.Lscope3:
+ 201               	.global	__vector_default
+ 203               	__vector_default:
+ 152:main.c        **** 	void __vector_default(void) { ; }
+ 205               	.LM15:
+ 206               	.LFBB4:
+ 207               	/* prologue: function */
+ 208               	/* frame size = 0 */
+ 209               	/* stack size = 0 */
+ 210               	.L__stack_usage = 0
+ 211 0046 0895      		ret
+ 213               	.Lscope4:
+ 214               		.section	.text.startup,"ax",@progbits
+ 216               	.global	main
+ 218               	main:
+ 317:main.c        **** }
+ 318:main.c        **** 
+ 319:main.c        **** static void (*jump_to_app)(void) = 0x0000;
+ 320:main.c        **** 
+ 321:main.c        **** int main(void)
+ 322:main.c        **** {
+ 220               	.LM16:
+ 221               	.LFBB5:
+ 223               	.LM17:
+ 224 0000 CF93      		push r28
+ 225 0002 DF93      		push r29
+ 226 0004 1F92      		push __zero_reg__
+ 227 0006 CDB7      		in r28,__SP_L__
+ 228 0008 DEB7      		in r29,__SP_H__
+ 229               	/* prologue: function */
+ 230               	/* frame size = 1 */
+ 231               	/* stack size = 3 */
+ 232               	.L__stack_usage = 3
+ 323:main.c        **** 	uint16_t address = 0;
+ 324:main.c        **** 	uint8_t device = 0, val;
+ 325:main.c        **** 
+ 326:main.c        **** 
+ 327:main.c        **** 
+ 328:main.c        **** #ifdef ENABLE_BOOT_LED	// LED ON
+ 329:main.c        **** 	BIPORT |= (1<<BIPNUM);	
+ 234               	.LM18:
+ 235 000a 5E9A      		sbi 0xb,6
+ 330:main.c        **** 	BIDDR  |= (1<<BIPNUM);
+ 237               	.LM19:
+ 238 000c 569A      		sbi 0xa,6
+ 331:main.c        **** #endif
+ 332:main.c        **** 
+ 333:main.c        **** 
+ 334:main.c        **** #ifdef DISABLE_WDT_AT_STARTUP
+ 335:main.c        **** 	#ifdef WDT_OFF_SPECIAL
+ 336:main.c        **** 		#warning "using target specific watchdog_off"
+ 337:main.c        **** 		bootloader_wdt_off();
+ 338:main.c        **** 	#else
+ 339:main.c        **** 		cli();
+ 240               	.LM20:
+ 241               	/* #APP */
+ 242               	 ;  339 "main.c" 1
+ 243 000e F894      		cli
+ 244               	 ;  0 "" 2
+ 340:main.c        **** 		wdt_reset();
+ 246               	.LM21:
+ 247               	 ;  340 "main.c" 1
+ 248 0010 A895      		wdr
+ 249               	 ;  0 "" 2
+ 341:main.c        **** 		MCUSR=0;
+ 251               	.LM22:
+ 252               	/* #NOAPP */
+ 253 0012 14BE      		out 0x34,__zero_reg__
+ 342:main.c        **** 	    WDTCSR|=_BV(WDCE) | _BV(WDE);
+ 255               	.LM23:
+ 256 0014 8091 6000 		lds r24,96
+ 257 0018 8861      		ori r24,lo8(24)
+ 258 001a 8093 6000 		sts 96,r24
+ 343:main.c        **** 	    WDTCSR=0;
+ 260               	.LM24:
+ 261 001e 1092 6000 		sts 96,__zero_reg__
+ 344:main.c        **** 		wdt_disable();
+ 263               	.LM25:
+ 264 0022 88E1      		ldi r24,lo8(24)
+ 265               	/* #APP */
+ 266               	 ;  344 "main.c" 1
+ 267 0024 0FB6      		in __tmp_reg__, __SREG__
+ 268 0026 F894      		cli
+ 269 0028 8093 6000 		sts 96, r24
+ 270 002c 1092 6000 		sts 96, __zero_reg__
+ 271 0030 0FBE      		out __SREG__,__tmp_reg__
+ 272               		
+ 273               	 ;  0 "" 2
+ 345:main.c        **** 	#endif
+ 346:main.c        **** #endif
+ 347:main.c        **** 	
+ 348:main.c        **** #ifdef START_POWERSAVE
+ 349:main.c        **** 	uint8_t OK = 1;
+ 350:main.c        **** #endif
+ 351:main.c        **** 
+ 352:main.c        **** 	BLDDR  &= ~(1<<BLPNUM);		// set as Input
+ 275               	.LM26:
+ 276               	/* #NOAPP */
+ 277 0032 5298      		cbi 0xa,2
+ 353:main.c        **** 	BLPORT |= (1<<BLPNUM);		// Enable pullup
+ 279               	.LM27:
+ 280 0034 5A9A      		sbi 0xb,2
+ 354:main.c        **** 
+ 355:main.c        **** 	// Set baud rate
+ 356:main.c        **** 	UART_BAUD_HIGH = (UART_CALC_BAUDRATE(BAUDRATE)>>8) & 0xFF;
+ 282               	.LM28:
+ 283 0036 1092 C500 		sts 197,__zero_reg__
+ 357:main.c        **** 	UART_BAUD_LOW = (UART_CALC_BAUDRATE(BAUDRATE) & 0xFF);
+ 285               	.LM29:
+ 286 003a 85E0      		ldi r24,lo8(5)
+ 287 003c 8093 C400 		sts 196,r24
+ 358:main.c        **** 
+ 359:main.c        **** #ifdef UART_DOUBLESPEED
+ 360:main.c        **** 	UART_STATUS = ( 1<<UART_DOUBLE );
+ 361:main.c        **** #endif
+ 362:main.c        **** 
+ 363:main.c        **** 	UART_CTRL = UART_CTRL_DATA;
+ 289               	.LM30:
+ 290 0040 88E1      		ldi r24,lo8(24)
+ 291 0042 8093 C100 		sts 193,r24
+ 364:main.c        **** 	UART_CTRL2 = UART_CTRL2_DATA;
+ 293               	.LM31:
+ 294 0046 86E0      		ldi r24,lo8(6)
+ 295 0048 8093 C200 		sts 194,r24
+ 365:main.c        **** 	
+ 366:main.c        **** #if defined(START_POWERSAVE)
+ 367:main.c        **** 	/*
+ 368:main.c        **** 		This is an adoption of the Butterfly Bootloader startup-sequence.
+ 369:main.c        **** 		It may look a little strange but separating the login-loop from
+ 370:main.c        **** 		the main parser-loop gives a lot a possibilities (timeout, sleep-modes
+ 371:main.c        **** 	    etc.).
+ 372:main.c        **** 	*/
+ 373:main.c        **** 	for(;OK;) 
+ 374:main.c        **** 	{
+ 375:main.c        **** 		if ((BLPIN & (1<<BLPNUM))) 
+ 376:main.c        **** 		{
+ 377:main.c        **** 		// jump to main app if pin is not grounded
+ 378:main.c        **** 		BLPORT &= ~(1<<BLPNUM);	// set to default
+ 379:main.c        **** 
+ 380:main.c        **** 		#ifdef UART_DOUBLESPEED
+ 381:main.c        **** 			UART_STATUS &= ~( 1<<UART_DOUBLE );
+ 382:main.c        **** 		#endif
+ 383:main.c        **** 
+ 384:main.c        **** 
+ 385:main.c        **** 		#ifdef ENABLE_BOOT_LED	// LED OFF
+ 386:main.c        **** 		BIPORT &= ~(1<<BIPNUM);	
+ 387:main.c        **** 		BIDDR  &= ~(1<<BIPNUM);
+ 388:main.c        **** 		#endif
+ 389:main.c        **** 
+ 390:main.c        **** 		jump_to_app();		// Jump to application sector
+ 391:main.c        **** 
+ 392:main.c        **** 		} 
+ 393:main.c        **** 		else 
+ 394:main.c        **** 		{
+ 395:main.c        **** 		val = recvchar();
+ 396:main.c        **** 		/* ESC */
+ 397:main.c        **** 			if (val == 0x1B) 
+ 398:main.c        **** 			{
+ 399:main.c        **** 				// AVRPROG connection
+ 400:main.c        **** 				// Wait for signon
+ 401:main.c        **** 				while (val != 'S')
+ 402:main.c        **** 				val = recvchar();
+ 403:main.c        **** 				
+ 404:main.c        **** 				send_boot();			// Report signon
+ 405:main.c        **** 				OK = 0;
+ 406:main.c        **** 			} 
+ 407:main.c        **** 			else 
+ 408:main.c        **** 			{
+ 409:main.c        **** 			sendchar('?');
+ 410:main.c        **** 			}
+ 411:main.c        **** 	    }
+ 412:main.c        **** 		// Power-Save code here
+ 413:main.c        **** 	}
+ 414:main.c        **** 
+ 415:main.c        **** #elif defined(START_SIMPLE)
+ 416:main.c        **** 
+ 417:main.c        **** 	if ((BLPIN & (1<<BLPNUM))) {
+ 418:main.c        **** 		// jump to main app if pin is not grounded
+ 419:main.c        **** 		BLPORT &= ~(1<<BLPNUM);		// set to default	
+ 420:main.c        **** 			
+ 421:main.c        **** 	#ifdef UART_DOUBLESPEED
+ 422:main.c        **** 		UART_STATUS &= ~( 1<<UART_DOUBLE );
+ 423:main.c        **** 	#endif
+ 424:main.c        **** 
+ 425:main.c        **** 		#ifdef ENABLE_BOOT_LED	// LED OFF
+ 426:main.c        **** 		BIPORT &= ~(1<<BIPNUM);	
+ 427:main.c        **** 		BIDDR  &= ~(1<<BIPNUM);
+ 428:main.c        **** 		#endif
+ 429:main.c        **** 
+ 430:main.c        **** 		jump_to_app();			// Jump to application sector
+ 431:main.c        **** 	}
+ 432:main.c        **** 
+ 433:main.c        **** #elif defined(START_WAIT)
+ 434:main.c        **** 
+ 435:main.c        **** 	PWRPORT |=  (1<<PWRPNUM);
+ 297               	.LM32:
+ 298 004c 5F9A      		sbi 0xb,7
+ 436:main.c        **** 	PWRDDR  |=  (1<<PWRPNUM);
+ 300               	.LM33:
+ 301 004e 579A      		sbi 0xa,7
+ 302 0050 E12C      		mov r14,__zero_reg__
+ 303 0052 F12C      		mov r15,__zero_reg__
+ 437:main.c        **** 
+ 438:main.c        **** 	uint16_t cnt = 0;
+ 439:main.c        **** 
+ 440:main.c        **** 	while (1) {
+ 441:main.c        **** 		if (UART_STATUS & (1<<UART_RXREADY))
+ 442:main.c        **** 			if (UART_DATA == START_WAIT_UARTCHAR)
+ 443:main.c        **** 				break;
+ 444:main.c        **** 
+ 445:main.c        **** 		if (cnt++ >= WAIT_VALUE) {
+ 446:main.c        **** 			BLPORT &= ~(1<<BLPNUM);		// set to default
+ 447:main.c        **** 
+ 448:main.c        **** 
+ 449:main.c        **** 			#ifdef ENABLE_BOOT_LED	// LED OFF
+ 450:main.c        **** 			BIPORT &= ~(1<<BIPNUM);	
+ 451:main.c        **** 			BIDDR  &= ~(1<<BIPNUM);
+ 452:main.c        **** 			#endif
+ 453:main.c        **** 			jump_to_app();			// Jump to application sector
+ 305               	.LM34:
+ 306 0054 00E0      		ldi r16,0
+ 307 0056 10E0      		ldi r17,0
+ 308               	.L14:
+ 441:main.c        **** 		if (UART_STATUS & (1<<UART_RXREADY))
+ 310               	.LM35:
+ 311 0058 8091 C000 		lds r24,192
+ 312 005c 87FF      		sbrs r24,7
+ 313 005e 00C0      		rjmp .L11
+ 442:main.c        **** 			if (UART_DATA == START_WAIT_UARTCHAR)
+ 315               	.LM36:
+ 316 0060 8091 C600 		lds r24,198
+ 317 0064 8335      		cpi r24,lo8(83)
+ 318 0066 01F0      		breq .L12
+ 319               	.L11:
+ 445:main.c        **** 		if (cnt++ >= WAIT_VALUE) {
+ 321               	.LM37:
+ 322 0068 80E2      		ldi r24,32
+ 323 006a E816      		cp r14,r24
+ 324 006c 83E0      		ldi r24,3
+ 325 006e F806      		cpc r15,r24
+ 326 0070 00F0      		brlo .L13
+ 446:main.c        **** 			BLPORT &= ~(1<<BLPNUM);		// set to default
+ 328               	.LM38:
+ 329 0072 5A98      		cbi 0xb,2
+ 450:main.c        **** 			BIPORT &= ~(1<<BIPNUM);	
+ 331               	.LM39:
+ 332 0074 5E98      		cbi 0xb,6
+ 451:main.c        **** 			BIDDR  &= ~(1<<BIPNUM);
+ 334               	.LM40:
+ 335 0076 5698      		cbi 0xa,6
+ 337               	.LM41:
+ 338 0078 F801      		movw r30,r16
+ 339 007a 0995      		icall
+ 340               	.L13:
+ 341               	.LBB23:
+ 342               	.LBB24:
+ 344               	.Ltext1:
+   1:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* Copyright (c) 2002, Marek Michalkiewicz
+   2:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Copyright (c) 2004,2005,2007 Joerg Wunsch
+   3:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Copyright (c) 2007  Florin-Viorel Petrov
+   4:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    All rights reserved.
+   5:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+   6:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Redistribution and use in source and binary forms, with or without
+   7:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    modification, are permitted provided that the following conditions are met:
+   8:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+   9:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Redistributions of source code must retain the above copyright
+  10:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer.
+  11:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  12:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Redistributions in binary form must reproduce the above copyright
+  13:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer in
+  14:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      the documentation and/or other materials provided with the
+  15:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      distribution.
+  16:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  17:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Neither the name of the copyright holders nor the names of
+  18:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      contributors may be used to endorse or promote products derived
+  19:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      from this software without specific prior written permission.
+  20:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  21:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  25:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  32:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  33:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* $Id$ */
+  34:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  35:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef _UTIL_DELAY_H_
+  36:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #define _UTIL_DELAY_H_ 1
+  37:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  38:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef __HAS_DELAY_CYCLES
+  39:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #define __HAS_DELAY_CYCLES 1
+  40:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
+  41:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  42:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <inttypes.h>
+  43:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <util/delay_basic.h>
+  44:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <math.h>
+  45:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  46:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /** \file */
+  47:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /** \defgroup util_delay <util/delay.h>: Convenience functions for busy-wait delay loops
+  48:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \code
+  49:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     #define F_CPU 1000000UL  // 1 MHz
+  50:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     //#define F_CPU 14.7456E6
+  51:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     #include <util/delay.h>
+  52:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \endcode
+  53:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  54:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \note As an alternative method, it is possible to pass the
+  55:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     F_CPU macro down to the compiler from the Makefile.
+  56:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     Obviously, in that case, no \c \#define statement should be
+  57:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     used.
+  58:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  59:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     The functions in this header file are wrappers around the basic
+  60:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     busy-wait functions from <util/delay_basic.h>.  They are meant as
+  61:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     convenience functions where actual time values can be specified
+  62:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     rather than a number of cycles to wait for.  The idea behind is
+  63:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     that compile-time constant expressions will be eliminated by
+  64:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     compiler optimization so floating-point expressions can be used
+  65:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     to calculate the number of delay cycles needed based on the CPU
+  66:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     frequency passed by the macro F_CPU.
+  67:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  68:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \note In order for these functions to work as intended, compiler
+  69:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     optimizations <em>must</em> be enabled, and the delay time
+  70:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     <em>must</em> be an expression that is a known constant at
+  71:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     compile-time.  If these requirements are not met, the resulting
+  72:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     delay will be much longer (and basically unpredictable), and
+  73:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     applications that otherwise do not use floating-point calculations
+  74:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     will experience severe code bloat by the floating-point library
+  75:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     routines linked into the application.
+  76:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  77:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     The functions available allow the specification of microsecond, and
+  78:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     millisecond delays directly, using the application-supplied macro
+  79:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     F_CPU as the CPU clock frequency (in Hertz).
+  80:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  81:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** */
+  82:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  83:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if !defined(__DOXYGEN__)
+  84:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** static inline void _delay_us(double __us) __attribute__((always_inline));
+  85:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** static inline void _delay_ms(double __ms) __attribute__((always_inline));
+  86:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
+  87:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  88:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef F_CPU
+  89:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* prevent compiler error by supplying a default */
+  90:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # warning "F_CPU not defined for <util/delay.h>"
+  91:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # define F_CPU 1000000UL
+  92:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
+  93:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  94:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef __OPTIMIZE__
+  95:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # warning "Compiler optimizations disabled; functions from <util/delay.h> won't work as designed"
+  96:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
+  97:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+  98:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+  99:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 100:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 101:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #  include <math.h>
+ 102:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
+ 103:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 104:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /**
+ 105:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    \ingroup util_delay
+ 106:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 107:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Perform a delay of \c __ms milliseconds, using _delay_loop_2().
+ 108:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 109:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    The macro F_CPU is supposed to be defined to a
+ 110:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    constant defining the CPU clock frequency (in Hertz).
+ 111:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 112:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    The maximal possible delay is 262.14 ms / F_CPU in MHz.
+ 113:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 114:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    When the user request delay which exceed the maximum possible one,
+ 115:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    _delay_ms() provides a decreased resolution functionality. In this
+ 116:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    mode _delay_ms() will work with a resolution of 1/10 ms, providing
+ 117:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    delays up to 6.5535 seconds (independent from CPU frequency).  The
+ 118:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    user will not be informed about decreased resolution.
+ 119:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 120:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    If the avr-gcc toolchain has __builtin_avr_delay_cycles(unsigned long)
+ 121:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    support, maximal possible delay is 4294967.295 ms/ F_CPU in MHz. For
+ 122:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    values greater than the maximal possible delay, overflows results in
+ 123:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    no delay i.e., 0ms.
+ 124:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 125:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Conversion of __us into clock cycles may not always result in integer.
+ 126:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    By default, the clock cycles rounded up to next integer. This ensures that
+ 127:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    the user gets atleast __us microseconds of delay.
+ 128:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 129:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Alternatively, user can define __DELAY_ROUND_DOWN__ and __DELAY_ROUND_CLOSEST__
+ 130:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    to round down and round to closest integer.
+ 131:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 132:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Note: The new implementation of _delay_ms(double __ms) with 
+ 133:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     __builtin_avr_delay_cycles(unsigned long) support is not backward compatible. 
+ 134:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    User can define __DELAY_BACKWARD_COMPATIBLE__ to get a backward compatible delay.
+ 135:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Also, the backward compatible
+ 136:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    algorithm will be chosen if the code is compiled in a <em>freestanding
+ 137:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    environment</em> (GCC option \c -ffreestanding), as the math functions
+ 138:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    required for rounding are not available to the compiler then.
+ 139:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 140:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****  */
+ 141:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** void
+ 142:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** _delay_ms(double __ms)
+ 143:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** {
+ 144:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	double __tmp ; 
+ 145:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+ 146:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 147:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 148:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	uint32_t __ticks_dc;
+ 149:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	extern void __builtin_avr_delay_cycles(unsigned long);
+ 150:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 1e3) * __ms;
+ 151:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 152:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#if defined(__DELAY_ROUND_DOWN__)
+ 153:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)fabs(__tmp);
+ 154:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 155:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#elif defined(__DELAY_ROUND_CLOSEST__)
+ 156:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(fabs(__tmp)+0.5);
+ 157:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 158:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#else
+ 159:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		//round up by default
+ 160:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+ 161:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#endif
+ 162:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
+ 163:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	__builtin_avr_delay_cycles(__ticks_dc);
+ 346               	.LM42:
+ 347 007c 8FEF      		ldi r24,lo8(9215)
+ 348 007e 93E2      		ldi r25,hi8(9215)
+ 349 0080 0197      		1: sbiw r24,1
+ 350 0082 01F4      		brne 1b
+ 351 0084 00C0      		rjmp .
+ 352 0086 0000      		nop
+ 353 0088 9FEF      		ldi r25,-1
+ 354 008a E91A      		sub r14,r25
+ 355 008c F90A      		sbc r15,r25
+ 356 008e 00C0      		rjmp .L14
+ 357               	.L12:
+ 358               	.LBE24:
+ 359               	.LBE23:
+ 361               	.Ltext2:
+ 454:main.c        **** 		}
+ 455:main.c        **** 
+ 456:main.c        **** 		_delay_ms(10);
+ 457:main.c        **** 	}
+ 458:main.c        **** 	send_boot();
+ 363               	.LM43:
+ 364 0090 0E94 0000 		call send_boot
+ 324:main.c        **** 	uint8_t device = 0, val;
+ 366               	.LM44:
+ 367 0094 812C      		mov r8,__zero_reg__
+ 323:main.c        **** 	uint16_t address = 0;
+ 369               	.LM45:
+ 370 0096 C12C      		mov r12,__zero_reg__
+ 371 0098 D12C      		mov r13,__zero_reg__
+ 459:main.c        **** 
+ 460:main.c        **** #elif defined(START_BOOTICE)
+ 461:main.c        **** #warning "BOOTICE mode - no startup-condition"
+ 462:main.c        **** 
+ 463:main.c        **** #else
+ 464:main.c        **** #error "Select START_ condition for bootloader in main.c"
+ 465:main.c        **** #endif
+ 466:main.c        **** 
+ 467:main.c        **** 
+ 468:main.c        **** 	for(;;) 
+ 469:main.c        **** 	{
+ 470:main.c        **** 		val = recvchar();
+ 471:main.c        **** 		// Autoincrement?
+ 472:main.c        **** 		if (val == 'a') 
+ 473:main.c        **** 		{
+ 474:main.c        **** 			sendchar('Y');			// Autoincrement is quicker
+ 475:main.c        **** 
+ 476:main.c        **** 		//write address
+ 477:main.c        **** 		} 
+ 478:main.c        **** 		else if (val == 'A') 
+ 479:main.c        **** 		{
+ 480:main.c        **** 			address = recvchar();		//read address 8 MSB
+ 481:main.c        **** 			address = (address<<8) | recvchar();
+ 482:main.c        **** 			sendchar('\r');
+ 483:main.c        **** 
+ 484:main.c        **** 		// Buffer load support
+ 485:main.c        **** 		} 
+ 486:main.c        **** 		else if (val == 'b') 
+ 487:main.c        **** 		{
+ 488:main.c        **** 			sendchar('Y');					// Report buffer load supported
+ 489:main.c        **** 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
+ 490:main.c        **** 			sendchar(sizeof(gBuffer) & 0xFF);
+ 491:main.c        **** 
+ 492:main.c        **** 		// Start buffer load
+ 493:main.c        **** 		} 
+ 494:main.c        **** 		else if (val == 'B') 
+ 495:main.c        **** 		{
+ 496:main.c        **** 			pagebuf_t size;
+ 497:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 498:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 499:main.c        **** 			val = recvchar();				// Load memory type ('E' or 'F')
+ 500:main.c        **** 			recvBuffer(size);
+ 501:main.c        **** 
+ 502:main.c        **** 			if (device == DEVTYPE) 
+ 503:main.c        **** 			{
+ 504:main.c        **** 				if (val == 'F') 
+ 505:main.c        **** 				{
+ 506:main.c        **** 				address = writeFlashPage(address, size);
+ 507:main.c        **** 				} 
+ 508:main.c        **** 				else if (val == 'E') 
+ 509:main.c        **** 				{
+ 510:main.c        **** 				address = writeEEpromPage(address, size);
+ 511:main.c        **** 				}
+ 512:main.c        **** 				sendchar('\r');
+ 513:main.c        **** 			} 
+ 514:main.c        **** 			else 
+ 515:main.c        **** 			{
+ 516:main.c        **** 			sendchar(0);
+ 517:main.c        **** 			}
+ 518:main.c        **** 
+ 519:main.c        **** 		// Block read
+ 520:main.c        **** 		} 
+ 521:main.c        **** 		else if (val == 'g') 
+ 522:main.c        **** 		{
+ 523:main.c        **** 			pagebuf_t size;
+ 524:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 525:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 526:main.c        **** 			val = recvchar();				// Get memtype
+ 527:main.c        **** 
+ 528:main.c        **** 			if (val == 'F') 
+ 529:main.c        **** 			{
+ 530:main.c        **** 			address = readFlashPage(address, size);
+ 531:main.c        **** 			} 
+ 532:main.c        **** 			else if (val == 'E') 
+ 533:main.c        **** 			{
+ 534:main.c        **** 			address = readEEpromPage(address, size);
+ 535:main.c        **** 			}
+ 536:main.c        **** 
+ 537:main.c        **** 		// Chip erase
+ 538:main.c        ****  		} 
+ 539:main.c        **** 		else if (val == 'e') 
+ 540:main.c        **** 		{
+ 541:main.c        **** 		if (device == DEVTYPE) 
+ 542:main.c        **** 			{
+ 543:main.c        **** 			eraseFlash();
+ 544:main.c        **** 			}
+ 545:main.c        **** 		sendchar('\r');
+ 546:main.c        **** 
+ 547:main.c        **** 		// Exit upgrade
+ 548:main.c        **** 		} 
+ 549:main.c        **** 		else if (val == 'E') 
+ 550:main.c        **** 		{
+ 551:main.c        **** 		wdt_enable(EXIT_WDT_TIME); // Enable Watchdog Timer to give reset
+ 373               	.LM46:
+ 374 009a 6CE0      		ldi r22,lo8(12)
+ 375 009c 362E      		mov r3,r22
+ 376               	.LBB25:
+ 377               	.LBB26:
+ 173:main.c        **** 		boot_page_erase(addr);		// Perform page erase
+ 379               	.LM47:
+ 380 009e 73E0      		ldi r23,lo8(3)
+ 381 00a0 672E      		mov r6,r23
+ 177:main.c        **** 	boot_rww_enable();
+ 383               	.LM48:
+ 384 00a2 E1E1      		ldi r30,lo8(17)
+ 385 00a4 7E2E      		mov r7,r30
+ 386               	.LBE26:
+ 387               	.LBE25:
+ 388               	.LBB28:
+ 389               	.LBB29:
+ 390               	.LBB30:
+ 202:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
+ 392               	.LM49:
+ 393 00a6 5524      		clr r5
+ 394 00a8 5394      		inc r5
+ 209:main.c        **** 	boot_page_write(pagestart);
+ 396               	.LM50:
+ 397 00aa F5E0      		ldi r31,lo8(5)
+ 398 00ac 4F2E      		mov r4,r31
+ 399               	.L15:
+ 400               	.LBE30:
+ 401               	.LBE29:
+ 402               	.LBE28:
+ 470:main.c        **** 		val = recvchar();
+ 404               	.LM51:
+ 405 00ae 0E94 0000 		call recvchar
+ 472:main.c        **** 		if (val == 'a') 
+ 407               	.LM52:
+ 408 00b2 8136      		cpi r24,lo8(97)
+ 409 00b4 01F4      		brne .L16
+ 474:main.c        **** 			sendchar('Y');			// Autoincrement is quicker
+ 411               	.LM53:
+ 412 00b6 89E5      		ldi r24,lo8(89)
+ 413 00b8 00C0      		rjmp .L59
+ 414               	.L16:
+ 478:main.c        **** 		else if (val == 'A') 
+ 416               	.LM54:
+ 417 00ba 8134      		cpi r24,lo8(65)
+ 418 00bc 01F4      		brne .L18
+ 480:main.c        **** 			address = recvchar();		//read address 8 MSB
+ 420               	.LM55:
+ 421 00be 0E94 0000 		call recvchar
+ 422 00c2 90E0      		ldi r25,0
+ 481:main.c        **** 			address = (address<<8) | recvchar();
+ 424               	.LM56:
+ 425 00c4 D82E      		mov r13,r24
+ 426 00c6 CC24      		clr r12
+ 427 00c8 0E94 0000 		call recvchar
+ 428 00cc C82A      		or r12,r24
+ 429 00ce 00C0      		rjmp .L60
+ 430               	.L18:
+ 486:main.c        **** 		else if (val == 'b') 
+ 432               	.LM57:
+ 433 00d0 8236      		cpi r24,lo8(98)
+ 434 00d2 01F4      		brne .L19
+ 488:main.c        **** 			sendchar('Y');					// Report buffer load supported
+ 436               	.LM58:
+ 437 00d4 89E5      		ldi r24,lo8(89)
+ 438 00d6 0E94 0000 		call sendchar
+ 489:main.c        **** 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
+ 440               	.LM59:
+ 441 00da 80E0      		ldi r24,0
+ 442 00dc 0E94 0000 		call sendchar
+ 490:main.c        **** 			sendchar(sizeof(gBuffer) & 0xFF);
+ 444               	.LM60:
+ 445 00e0 80E8      		ldi r24,lo8(-128)
+ 446 00e2 00C0      		rjmp .L59
+ 447               	.L19:
+ 494:main.c        **** 		else if (val == 'B') 
+ 449               	.LM61:
+ 450 00e4 8234      		cpi r24,lo8(66)
+ 451 00e6 01F0      		breq .+2
+ 452 00e8 00C0      		rjmp .L20
+ 453               	.LBB37:
+ 497:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 455               	.LM62:
+ 456 00ea 0E94 0000 		call recvchar
+ 498:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 458               	.LM63:
+ 459 00ee 0E94 0000 		call recvchar
+ 460 00f2 982E      		mov r9,r24
+ 499:main.c        **** 			val = recvchar();				// Load memory type ('E' or 'F')
+ 462               	.LM64:
+ 463 00f4 0E94 0000 		call recvchar
+ 464 00f8 982F      		mov r25,r24
+ 465 00fa 00E0      		ldi r16,lo8(gBuffer)
+ 466 00fc 10E0      		ldi r17,hi8(gBuffer)
+ 467               	.LBB32:
+ 468               	.LBB33:
+ 185:main.c        **** 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
+ 470               	.LM65:
+ 471 00fe B12C      		mov r11,__zero_reg__
+ 472               	.L21:
+ 187:main.c        **** 		*tmp++ = (cnt < size) ? recvchar() : 0xFF;
+ 474               	.LM66:
+ 475 0100 B914      		cp r11,r9
+ 476 0102 00F4      		brsh .L55
+ 477 0104 9983      		std Y+1,r25
+ 478 0106 0E94 0000 		call recvchar
+ 479 010a 9981      		ldd r25,Y+1
+ 480 010c 00C0      		rjmp .L22
+ 481               	.L55:
+ 482 010e 8FEF      		ldi r24,lo8(-1)
+ 483               	.L22:
+ 484 0110 F801      		movw r30,r16
+ 485 0112 8193      		st Z+,r24
+ 486 0114 8F01      		movw r16,r30
+ 185:main.c        **** 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
+ 488               	.LM67:
+ 489 0116 B394      		inc r11
+ 490 0118 F0E8      		ldi r31,lo8(-128)
+ 491 011a BF12      		cpse r11,r31
+ 492 011c 00C0      		rjmp .L21
+ 493               	.LBE33:
+ 494               	.LBE32:
+ 502:main.c        **** 			if (device == DEVTYPE) 
+ 496               	.LM68:
+ 497 011e 85E7      		ldi r24,lo8(117)
+ 498 0120 8812      		cpse r8,r24
+ 499 0122 00C0      		rjmp .L61
+ 504:main.c        **** 				if (val == 'F') 
+ 501               	.LM69:
+ 502 0124 9634      		cpi r25,lo8(70)
+ 503 0126 01F0      		breq .+2
+ 504 0128 00C0      		rjmp .L25
+ 505               	.LBB34:
+ 506               	.LBB31:
+ 193:main.c        **** 	uint32_t pagestart = (uint32_t)waddr<<1;
+ 508               	.LM70:
+ 509 012a 8601      		movw r16,r12
+ 510 012c 20E0      		ldi r18,0
+ 511 012e 30E0      		ldi r19,0
+ 512 0130 000F      		lsl r16
+ 513 0132 111F      		rol r17
+ 514 0134 221F      		rol r18
+ 515 0136 331F      		rol r19
+ 196:main.c        **** 	uint8_t *tmp = gBuffer;
+ 517               	.LM71:
+ 518 0138 A0E0      		ldi r26,lo8(gBuffer)
+ 519 013a B0E0      		ldi r27,hi8(gBuffer)
+ 520 013c 8091 0000 		lds r24,gBuffer
+ 194:main.c        **** 	uint32_t baddr = pagestart;
+ 522               	.LM72:
+ 523 0140 B901      		movw r22,r18
+ 524 0142 A801      		movw r20,r16
+ 525 0144 900E      		add r9,r16
+ 526               	.L27:
+ 201:main.c        **** 		data |= *tmp++ << 8;
+ 528               	.LM73:
+ 529 0146 1196      		adiw r26,1
+ 530 0148 EC91      		ld r30,X
+ 531 014a 1197      		sbiw r26,1
+ 532 014c 90E0      		ldi r25,0
+ 533 014e 9E2B      		or r25,r30
+ 202:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
+ 535               	.LM74:
+ 536 0150 FA01      		movw r30,r20
+ 537               	/* #APP */
+ 538               	 ;  202 "main.c" 1
+ 539 0152 0C01      		movw  r0, r24
+ 540 0154 5092 5700 		sts 87, r5
+ 541 0158 E895      		spm
+ 542 015a 1124      		clr  r1
+ 543               		
+ 544               	 ;  0 "" 2
+ 204:main.c        **** 		baddr += 2;			// Select next word in memory
+ 546               	.LM75:
+ 547               	/* #NOAPP */
+ 548 015c 4E5F      		subi r20,-2
+ 549 015e 5F4F      		sbci r21,-1
+ 550 0160 6F4F      		sbci r22,-1
+ 551 0162 7F4F      		sbci r23,-1
+ 207:main.c        **** 	while (size);				// Loop until all bytes written
+ 553               	.LM76:
+ 554 0164 9416      		cp r9,r20
+ 555 0166 01F0      		breq .L26
+ 201:main.c        **** 		data |= *tmp++ << 8;
+ 557               	.LM77:
+ 558 0168 1296      		adiw r26,2
+ 559 016a 8C91      		ld r24,X
+ 560 016c 1297      		sbiw r26,2
+ 561 016e 1296      		adiw r26,2
+ 562 0170 00C0      		rjmp .L27
+ 563               	.L26:
+ 209:main.c        **** 	boot_page_write(pagestart);
+ 565               	.LM78:
+ 566 0172 F801      		movw r30,r16
+ 567               	/* #APP */
+ 568               	 ;  209 "main.c" 1
+ 569 0174 4092 5700 		sts 87, r4
+ 570 0178 E895      		spm
+ 571               		
+ 572               	 ;  0 "" 2
+ 573               	/* #NOAPP */
+ 574               	.L29:
+ 210:main.c        **** 	boot_spm_busy_wait();
+ 576               	.LM79:
+ 577 017a 07B6      		in __tmp_reg__,0x37
+ 578 017c 00FC      		sbrc __tmp_reg__,0
+ 579 017e 00C0      		rjmp .L29
+ 211:main.c        **** 	boot_rww_enable();		// Re-enable the RWW section
+ 581               	.LM80:
+ 582               	/* #APP */
+ 583               	 ;  211 "main.c" 1
+ 584 0180 7092 5700 		sts 87, r7
+ 585 0184 E895      		spm
+ 586               		
+ 587               	 ;  0 "" 2
+ 213:main.c        **** 	return baddr>>1;
+ 589               	.LM81:
+ 590               	/* #NOAPP */
+ 591 0186 7695      		lsr r23
+ 592 0188 6795      		ror r22
+ 593 018a 5795      		ror r21
+ 594 018c 4795      		ror r20
+ 595 018e 6A01      		movw r12,r20
+ 596               	.LBE31:
+ 597               	.LBE34:
+ 598 0190 00C0      		rjmp .L60
+ 599               	.L25:
+ 508:main.c        **** 				else if (val == 'E') 
+ 601               	.LM82:
+ 602 0192 9534      		cpi r25,lo8(69)
+ 603 0194 01F0      		breq .+2
+ 604 0196 00C0      		rjmp .L60
+ 605 0198 00E0      		ldi r16,lo8(gBuffer)
+ 606 019a 10E0      		ldi r17,hi8(gBuffer)
+ 607 019c C601      		movw r24,r12
+ 608 019e 8050      		subi r24,lo8(gBuffer)
+ 609 01a0 9040      		sbci r25,hi8(gBuffer)
+ 610 01a2 5C01      		movw r10,r24
+ 611 01a4 F801      		movw r30,r16
+ 612 01a6 E90D      		add r30,r9
+ 613 01a8 2E2E      		mov r2,r30
+ 614               	.L32:
+ 615 01aa C501      		movw r24,r10
+ 616 01ac 800F      		add r24,r16
+ 617 01ae 911F      		adc r25,r17
+ 618               	.LBB35:
+ 619               	.LBB36:
+ 222:main.c        **** 		eeprom_write_byte( (uint8_t*)address, *tmp++ );
+ 621               	.LM83:
+ 622 01b0 F801      		movw r30,r16
+ 623 01b2 6191      		ld r22,Z+
+ 624 01b4 8F01      		movw r16,r30
+ 625 01b6 0E94 0000 		call __eewr_byte_m168p
+ 226:main.c        **** 	while (size);				// Loop until all bytes written
+ 627               	.LM84:
+ 628 01ba 2012      		cpse r2,r16
+ 629 01bc 00C0      		rjmp .L32
+ 630 01be FFEF      		ldi r31,-1
+ 631 01c0 CF1A      		sub r12,r31
+ 632 01c2 DF0A      		sbc r13,r31
+ 633 01c4 9A94      		dec r9
+ 634 01c6 C90C      		add r12,r9
+ 635 01c8 D11C      		adc r13,__zero_reg__
+ 636 01ca 00C0      		rjmp .L60
+ 637               	.L20:
+ 638               	.LBE36:
+ 639               	.LBE35:
+ 640               	.LBE37:
+ 521:main.c        **** 		else if (val == 'g') 
+ 642               	.LM85:
+ 643 01cc 8736      		cpi r24,lo8(103)
+ 644 01ce 01F0      		breq .+2
+ 645 01d0 00C0      		rjmp .L33
+ 646               	.LBB38:
+ 524:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 648               	.LM86:
+ 649 01d2 0E94 0000 		call recvchar
+ 525:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 651               	.LM87:
+ 652 01d6 0E94 0000 		call recvchar
+ 653 01da B82E      		mov r11,r24
+ 526:main.c        **** 			val = recvchar();				// Get memtype
+ 655               	.LM88:
+ 656 01dc 0E94 0000 		call recvchar
+ 528:main.c        **** 			if (val == 'F') 
+ 658               	.LM89:
+ 659 01e0 8634      		cpi r24,lo8(70)
+ 660 01e2 01F4      		brne .L34
+ 661               	.LBB39:
+ 662               	.LBB40:
+ 235:main.c        **** 	uint32_t baddr = (uint32_t)waddr<<1;
+ 664               	.LM90:
+ 665 01e4 E12C      		mov r14,__zero_reg__
+ 666 01e6 F12C      		mov r15,__zero_reg__
+ 667 01e8 CC0C      		lsl r12
+ 668 01ea DD1C      		rol r13
+ 669 01ec EE1C      		rol r14
+ 670 01ee FF1C      		rol r15
+ 671 01f0 BC0C      		add r11,r12
+ 672               	.L36:
+ 673               	.LBB41:
+ 246:main.c        **** 		data = pgm_read_word_near(baddr);
+ 675               	.LM91:
+ 676 01f2 F601      		movw r30,r12
+ 677               	/* #APP */
+ 678               	 ;  246 "main.c" 1
+ 679 01f4 0591      		lpm r16, Z+
+ 680 01f6 1491      		lpm r17, Z
+ 681               		
+ 682               	 ;  0 "" 2
+ 683               	/* #NOAPP */
+ 684               	.LBE41:
+ 264:main.c        **** 		sendchar(data);			// send LSB
+ 686               	.LM92:
+ 687 01f8 802F      		mov r24,r16
+ 688 01fa 0E94 0000 		call sendchar
+ 265:main.c        **** 		sendchar((data >> 8));		// send MSB
+ 690               	.LM93:
+ 691 01fe 812F      		mov r24,r17
+ 692 0200 0E94 0000 		call sendchar
+ 266:main.c        **** 		baddr += 2;			// Select next word in memory
+ 694               	.LM94:
+ 695 0204 82E0      		ldi r24,2
+ 696 0206 C80E      		add r12,r24
+ 697 0208 D11C      		adc r13,__zero_reg__
+ 698 020a E11C      		adc r14,__zero_reg__
+ 699 020c F11C      		adc r15,__zero_reg__
+ 269:main.c        **** 	while (size);				// Repeat until block has been read
+ 701               	.LM95:
+ 702 020e BC10      		cpse r11,r12
+ 703 0210 00C0      		rjmp .L36
+ 270:main.c        **** 	return baddr>>1;
+ 705               	.LM96:
+ 706 0212 B701      		movw r22,r14
+ 707 0214 A601      		movw r20,r12
+ 708 0216 7695      		lsr r23
+ 709 0218 6795      		ror r22
+ 710 021a 5795      		ror r21
+ 711 021c 4795      		ror r20
+ 712 021e 6A01      		movw r12,r20
+ 713               	.LBE40:
+ 714               	.LBE39:
+ 715 0220 00C0      		rjmp .L15
+ 716               	.L34:
+ 532:main.c        **** 			else if (val == 'E') 
+ 718               	.LM97:
+ 719 0222 8534      		cpi r24,lo8(69)
+ 720 0224 01F0      		breq .+2
+ 721 0226 00C0      		rjmp .L15
+ 722 0228 8601      		movw r16,r12
+ 723 022a AC2C      		mov r10,r12
+ 724 022c AB0C      		add r10,r11
+ 725               	.L38:
+ 726               	.LBB42:
+ 727               	.LBB43:
+ 277:main.c        **** 	sendchar( eeprom_read_byte( (uint8_t*)address ) );
+ 729               	.LM98:
+ 730 022e C801      		movw r24,r16
+ 731 0230 0E94 0000 		call __eerd_byte_m168p
+ 732 0234 0E94 0000 		call sendchar
+ 278:main.c        **** 	address++;
+ 734               	.LM99:
+ 735 0238 0F5F      		subi r16,-1
+ 736 023a 1F4F      		sbci r17,-1
+ 281:main.c        **** 	while (size);				// Repeat until block has been read
+ 738               	.LM100:
+ 739 023c A012      		cpse r10,r16
+ 740 023e 00C0      		rjmp .L38
+ 741 0240 9FEF      		ldi r25,-1
+ 742 0242 C91A      		sub r12,r25
+ 743 0244 D90A      		sbc r13,r25
+ 744 0246 BA94      		dec r11
+ 745 0248 CB0C      		add r12,r11
+ 746 024a D11C      		adc r13,__zero_reg__
+ 747 024c 00C0      		rjmp .L15
+ 748               	.L33:
+ 749               	.LBE43:
+ 750               	.LBE42:
+ 751               	.LBE38:
+ 539:main.c        **** 		else if (val == 'e') 
+ 753               	.LM101:
+ 754 024e 8536      		cpi r24,lo8(101)
+ 755 0250 01F4      		brne .L39
+ 541:main.c        **** 		if (device == DEVTYPE) 
+ 757               	.LM102:
+ 758 0252 E5E7      		ldi r30,lo8(117)
+ 759 0254 8E12      		cpse r8,r30
+ 760 0256 00C0      		rjmp .L60
+ 761 0258 E0E0      		ldi r30,0
+ 762 025a F0E0      		ldi r31,0
+ 763               	.L44:
+ 764               	.LBB44:
+ 765               	.LBB27:
+ 173:main.c        **** 		boot_page_erase(addr);		// Perform page erase
+ 767               	.LM103:
+ 768               	/* #APP */
+ 769               	 ;  173 "main.c" 1
+ 770 025c 6092 5700 		sts 87, r6
+ 771 0260 E895      		spm
+ 772               		
+ 773               	 ;  0 "" 2
+ 774               	/* #NOAPP */
+ 775               	.L42:
+ 174:main.c        **** 		boot_spm_busy_wait();		// Wait until the memory is erased.
+ 777               	.LM104:
+ 778 0262 07B6      		in __tmp_reg__,0x37
+ 779 0264 00FC      		sbrc __tmp_reg__,0
+ 780 0266 00C0      		rjmp .L42
+ 781 0268 E058      		subi r30,-128
+ 782 026a FF4F      		sbci r31,-1
+ 171:main.c        **** 	while (APP_END > addr) 
+ 784               	.LM105:
+ 785 026c E115      		cp r30,__zero_reg__
+ 786 026e 88E3      		ldi r24,56
+ 787 0270 F807      		cpc r31,r24
+ 788 0272 01F4      		brne .L44
+ 177:main.c        **** 	boot_rww_enable();
+ 790               	.LM106:
+ 791               	/* #APP */
+ 792               	 ;  177 "main.c" 1
+ 793 0274 7092 5700 		sts 87, r7
+ 794 0278 E895      		spm
+ 795               		
+ 796               	 ;  0 "" 2
+ 797               	/* #NOAPP */
+ 798 027a 00C0      		rjmp .L60
+ 799               	.L39:
+ 800               	.LBE27:
+ 801               	.LBE44:
+ 549:main.c        **** 		else if (val == 'E') 
+ 803               	.LM107:
+ 804 027c 8534      		cpi r24,lo8(69)
+ 805 027e 01F4      		brne .L45
+ 807               	.LM108:
+ 808 0280 E8E1      		ldi r30,lo8(24)
+ 809 0282 F0E0      		ldi r31,0
+ 810               	/* #APP */
+ 811               	 ;  551 "main.c" 1
+ 812 0284 0FB6      		in __tmp_reg__,__SREG__
+ 813 0286 F894      		cli
+ 814 0288 A895      		wdr
+ 815 028a E093 6000 		sts 96,r30
+ 816 028e 0FBE      		out __SREG__,__tmp_reg__
+ 817 0290 3092 6000 		sts 96,r3
+ 818               		
+ 819               	 ;  0 "" 2
+ 820               	/* #NOAPP */
+ 821 0294 00C0      		rjmp .L60
+ 822               	.L45:
+ 552:main.c        **** 		sendchar('\r');
+ 553:main.c        **** 
+ 554:main.c        **** 		#ifdef WRITELOCKBITS
+ 555:main.c        **** 			#warning "Extension 'WriteLockBits' enabled"
+ 556:main.c        **** 			// TODO: does not work reliably
+ 557:main.c        **** 			// write lockbits
+ 558:main.c        **** 			} 
+ 559:main.c        **** 			else if (val == 'l') 
+ 560:main.c        **** 			{
+ 561:main.c        **** 			if (device == DEVTYPE) 
+ 562:main.c        **** 				{
+ 563:main.c        **** 				// write_lock_bits(recvchar());
+ 564:main.c        **** 				boot_lock_bits_set(recvchar());	// boot.h takes care of mask
+ 565:main.c        **** 				boot_spm_busy_wait();
+ 566:main.c        **** 				}
+ 567:main.c        **** 			sendchar('\r');
+ 568:main.c        **** 		#endif
+ 569:main.c        **** 		// Enter programming mode
+ 570:main.c        **** 		} 
+ 571:main.c        **** 		else if (val == 'P') 
+ 824               	.LM109:
+ 825 0296 8035      		cpi r24,lo8(80)
+ 826 0298 01F0      		breq .L60
+ 572:main.c        **** 		{
+ 573:main.c        **** 		sendchar('\r');
+ 574:main.c        **** 
+ 575:main.c        **** 		// Leave programming mode
+ 576:main.c        **** 		} 
+ 577:main.c        **** 		else if (val == 'L') 
+ 828               	.LM110:
+ 829 029a 8C34      		cpi r24,lo8(76)
+ 830 029c 01F0      		breq .L60
+ 578:main.c        **** 		{
+ 579:main.c        **** 		sendchar('\r');
+ 580:main.c        **** 		// return programmer type
+ 581:main.c        **** 		} 
+ 582:main.c        **** 		else if (val == 'p') 
+ 832               	.LM111:
+ 833 029e 8037      		cpi r24,lo8(112)
+ 834 02a0 01F4      		brne .L48
+ 583:main.c        **** 		{
+ 584:main.c        **** 		sendchar('S');		// always serial programmer
+ 836               	.LM112:
+ 837 02a2 83E5      		ldi r24,lo8(83)
+ 838 02a4 00C0      		rjmp .L59
+ 839               	.L48:
+ 585:main.c        **** 
+ 586:main.c        **** 		#ifdef ENABLEREADFUSELOCK
+ 587:main.c        **** 			#warning "Extension 'ReadFuseLock' enabled"
+ 588:main.c        **** 			// read "low" fuse bits
+ 589:main.c        **** 			} 
+ 590:main.c        **** 			else if (val == 'F') 
+ 591:main.c        **** 			{
+ 592:main.c        **** 			sendchar(read_fuse_lock(GET_LOW_FUSE_BITS));
+ 593:main.c        **** 
+ 594:main.c        **** 			// read lock bits
+ 595:main.c        **** 			} 
+ 596:main.c        **** 			else if (val == 'r') 
+ 597:main.c        **** 			{
+ 598:main.c        **** 			sendchar(read_fuse_lock(GET_LOCK_BITS));
+ 599:main.c        **** 
+ 600:main.c        **** 			// read high fuse bits
+ 601:main.c        **** 			} 
+ 602:main.c        **** 			else if (val == 'N') 
+ 603:main.c        **** 			{
+ 604:main.c        **** 			sendchar(read_fuse_lock(GET_HIGH_FUSE_BITS));
+ 605:main.c        **** 			// read extended fuse bits
+ 606:main.c        **** 			} 
+ 607:main.c        **** 			else if (val == 'Q') 
+ 608:main.c        **** 			{
+ 609:main.c        **** 			sendchar(read_fuse_lock(GET_EXTENDED_FUSE_BITS));
+ 610:main.c        **** 			#endif
+ 611:main.c        **** 
+ 612:main.c        **** 		// Return device type
+ 613:main.c        **** 		} 
+ 614:main.c        **** 		else if (val == 't') 
+ 841               	.LM113:
+ 842 02a6 8437      		cpi r24,lo8(116)
+ 843 02a8 01F4      		brne .L49
+ 615:main.c        **** 		{
+ 616:main.c        **** 		sendchar(DEVTYPE);
+ 845               	.LM114:
+ 846 02aa 85E7      		ldi r24,lo8(117)
+ 847 02ac 0E94 0000 		call sendchar
+ 848               	.L61:
+ 617:main.c        **** 		sendchar(0);
+ 850               	.LM115:
+ 851 02b0 80E0      		ldi r24,0
+ 852 02b2 00C0      		rjmp .L59
+ 853               	.L49:
+ 618:main.c        **** 		// clear and set LED ignored
+ 619:main.c        **** 		} 
+ 620:main.c        **** 		else if ((val == 'x') || (val == 'y')) 
+ 855               	.LM116:
+ 856 02b4 98E8      		ldi r25,lo8(-120)
+ 857 02b6 980F      		add r25,r24
+ 858 02b8 9230      		cpi r25,lo8(2)
+ 859 02ba 00F4      		brsh .L50
+ 621:main.c        **** 		{
+ 622:main.c        **** 		recvchar();
+ 861               	.LM117:
+ 862 02bc 0E94 0000 		call recvchar
+ 863 02c0 00C0      		rjmp .L60
+ 864               	.L50:
+ 623:main.c        **** 		sendchar('\r');
+ 624:main.c        **** 
+ 625:main.c        **** 		// set device
+ 626:main.c        **** 		} 
+ 627:main.c        **** 		else if (val == 'T') 
+ 866               	.LM118:
+ 867 02c2 8435      		cpi r24,lo8(84)
+ 868 02c4 01F4      		brne .L51
+ 628:main.c        **** 		{
+ 629:main.c        **** 		device = recvchar();
+ 870               	.LM119:
+ 871 02c6 0E94 0000 		call recvchar
+ 872 02ca 882E      		mov r8,r24
+ 873               	.L60:
+ 630:main.c        **** 		sendchar('\r');
+ 875               	.LM120:
+ 876 02cc 8DE0      		ldi r24,lo8(13)
+ 877 02ce 00C0      		rjmp .L59
+ 878               	.L51:
+ 631:main.c        **** 		// Return software identifier
+ 632:main.c        **** 		} 
+ 633:main.c        **** 		else if (val == 'S') 
+ 880               	.LM121:
+ 881 02d0 8335      		cpi r24,lo8(83)
+ 882 02d2 01F4      		brne .L52
+ 634:main.c        **** 		{
+ 635:main.c        **** 		send_boot();
+ 884               	.LM122:
+ 885 02d4 0E94 0000 		call send_boot
+ 886 02d8 00C0      		rjmp .L15
+ 887               	.L52:
+ 636:main.c        **** 
+ 637:main.c        **** 		// Return Software Version
+ 638:main.c        **** 		} 
+ 639:main.c        **** 		else if (val == 'V') {
+ 889               	.LM123:
+ 890 02da 8635      		cpi r24,lo8(86)
+ 891 02dc 01F4      		brne .L53
+ 640:main.c        **** 		sendchar(VERSION_HIGH);
+ 893               	.LM124:
+ 894 02de 80E3      		ldi r24,lo8(48)
+ 895 02e0 0E94 0000 		call sendchar
+ 641:main.c        **** 		sendchar(VERSION_LOW);
+ 897               	.LM125:
+ 898 02e4 88E3      		ldi r24,lo8(56)
+ 899 02e6 00C0      		rjmp .L59
+ 900               	.L53:
+ 642:main.c        **** 
+ 643:main.c        **** 		// Return Signature Bytes (it seems that 
+ 644:main.c        **** 		// AVRProg expects the "Atmel-byte" 0x1E last
+ 645:main.c        **** 		// but shows it first in the dialog-window)
+ 646:main.c        **** 		} 
+ 647:main.c        **** 		else if (val == 's') 
+ 902               	.LM126:
+ 903 02e8 8337      		cpi r24,lo8(115)
+ 904 02ea 01F4      		brne .L54
+ 648:main.c        **** 		{
+ 649:main.c        **** 		sendchar(SIG_BYTE3);
+ 906               	.LM127:
+ 907 02ec 8BE0      		ldi r24,lo8(11)
+ 908 02ee 0E94 0000 		call sendchar
+ 650:main.c        **** 		sendchar(SIG_BYTE2);
+ 910               	.LM128:
+ 911 02f2 84E9      		ldi r24,lo8(-108)
+ 912 02f4 0E94 0000 		call sendchar
+ 651:main.c        **** 		sendchar(SIG_BYTE1);
+ 914               	.LM129:
+ 915 02f8 8EE1      		ldi r24,lo8(30)
+ 916 02fa 00C0      		rjmp .L59
+ 917               	.L54:
+ 652:main.c        **** 
+ 653:main.c        **** 		/* ESC */
+ 654:main.c        **** 		} 
+ 655:main.c        **** 		else if(val != 0x1b) 
+ 919               	.LM130:
+ 920 02fc 8B31      		cpi r24,lo8(27)
+ 921 02fe 01F4      		brne .+2
+ 922 0300 00C0      		rjmp .L15
+ 656:main.c        **** 		{
+ 657:main.c        **** 		sendchar('?');
+ 924               	.LM131:
+ 925 0302 8FE3      		ldi r24,lo8(63)
+ 926               	.L59:
+ 927 0304 0E94 0000 		call sendchar
+ 928 0308 00C0      		rjmp .L15
+ 942               	.Lscope5:
+ 943               		.comm	gBuffer,128,1
+ 945               		.text
+ 947               	.Letext0:
+ 948               		.ident	"GCC: (GNU) 4.8.1"
+ 949               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:2      *ABS*:0000003e __SP_H__
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:3      *ABS*:0000003d __SP_L__
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:4      *ABS*:0000003f __SREG__
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:5      *ABS*:00000000 __tmp_reg__
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:6      *ABS*:00000001 __zero_reg__
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:116    .text:00000000 sendchar
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:138    .text:0000000e recvchar
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:162    .text:0000001c send_boot
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:203    .text:00000046 __vector_default
+/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:218    .text.startup:00000000 main
+                            *COM*:00000080 gBuffer
+
+UNDEFINED SYMBOLS
+__eewr_byte_m168p
+__eerd_byte_m168p
+__do_clear_bss
