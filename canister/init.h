@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include "adc.h"
+#include "include/ds18b20/ds18b20.h"
 
 
 // Pinout:
@@ -43,19 +44,36 @@
 
 #define TIMER_TUNE 		(0xFF - 144) // to get 100 Hz overflow interrrupts
 
-#define OUT_ON 			(PORTC |=  (1<<2))
-#define OUT_OFF 		(PORTC &= ~(1<<2))
-#define OUT_INVERT 		(PORTC ^=  (1<<2))
+#define OUT_ON 			(PORTC |=  (1 << PC2))
+#define OUT_OFF 		(PORTC &= ~(1 << PC2))
+#define OUT_INVERT 		(PORTC ^=  (1 << PC2))
 
-#define WTR_SENS_ON 	(PORTC |=  (1<<4))
-#define WTR_SENS_OFF	(PORTC &= ~(1<<4))
+#define WTR_SENS_ON 	(PORTC |=  (1 << PC4))
+#define WTR_SENS_OFF	(PORTC &= ~(1 << PC4))
 
-#define VREF_OFF 		(PORTC |=  (1 << PC1));
-#define VREF_ON 		(PORTC &= ~(1 << PC1));;
+#define VREF_OFF 		(PORTC |=  (1 << PC1))
+#define VREF_ON 		(PORTC &= ~(1 << PC1))
+
+#define BT_CMD_ON 		(PORTD |=  (1 << PD4))
+#define BT_CMD_OFF		(PORTD &= ~(1 << PD4))
+
+#define BT_RESET_OFF 	(PORTD |=  (1 << PD5))
+#define BT_RESET		(PORTD &= ~(1 << PD5))
+
+#define BT_PWR_ON 		(PORTD |=  (1 << PD7))
+#define BT_PWR_OFF		(PORTD &= ~(1 << PD7))
+
 
 
 void init();
+void reset_wdt();
 
 void setLED(uint8_t R, uint8_t G, uint8_t B);
+
+void turn_everything_on();
+void turn_everything_off();
+
+void processTemp();
+void processLeakage();
 
 #endif	// _INIT_H_

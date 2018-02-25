@@ -1,109 +1,205 @@
-#include "ds18b20.h"
+/* ds18b20.c - a part of avr-ds18b20 library
+ *
+ * Copyright (C) 2016 Jacek Wieczorek
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.	See the LICENSE file for details.
+ */
 
-#include <util/delay.h>	//Header for _delay_ms()
+#include <stddef.h>
+#include <util/delay.h>
+#include "include/ds18b20/ds18b20.h"
+#include "include/ds18b20/onewire.h"
 
-int tempt=0;
-uint8_t therm_reset()
+static uint8_t ds18b20crc8( uint8_t *data, uint8_t length )
 {
-	uint8_t i;
-	//Pull line low and wait for 480uS
-	THERM_LOW();
-	THERM_OUTPUT_MODE();
-	_delay_us(430);	//480 //this must be smaller when moving delay func to other .c file
-	//Release line and wait for 60uS
-	THERM_INPUT_MODE();
-	_delay_us(60); //60
-	//Store line value and wait until the completion of 480uS period
-	i=(THERM_PIN & (1<<THERM_DQ));
-	_delay_us(420); //420
-	//Return the value read from the presence pulse (0=OK, 1=WRONG)
-	return i;
-}
+	//Generate 8bit CRC for given data (Maxim/Dallas)
 
-void therm_write_bit(uint8_t bit)
-{
-	//Pull line low for 1uS
-	THERM_LOW();
-	THERM_OUTPUT_MODE();
-	_delay_us(1);//1
-	//If we want to write 1, release the line (if not will keep low)
-	if(bit) THERM_INPUT_MODE();
-	//Wait for 60uS and release the line
-	_delay_us(50);//60
-	THERM_INPUT_MODE();
-}
+	uint8_t i = 0;
+	uint8_t j = 0;
+	uint8_t mix = 0;
+	uint8_t crc = 0;
+	uint8_t byte = 0;
 
-uint8_t therm_read_bit(void)
-{
-	uint8_t bit=0;
-	//Pull line low for 1uS
-	THERM_LOW();
-	THERM_OUTPUT_MODE();
-	_delay_us(1);//1
-	//Release line and wait for 14uS
-	THERM_INPUT_MODE();
-	_delay_us(10);//14
-	//Read line value
-	if(THERM_PIN&(1<<THERM_DQ)) bit=1;
-	//Wait for 45uS to end and return read value
-	_delay_us(40);//45
-	return bit;
-}
-
-uint8_t therm_read_byte(void)
-{
-	uint8_t i=8, n=0;
-	while(i--)
+	for ( i = 0; i < length; i++ )
 	{
-		//Shift one position right and store read value
-		n>>=1;
-		n|=(therm_read_bit()<<7);
+		byte = data[i];
+
+		for( j = 0; j < 8; j++ )
+		{
+			mix = ( crc ^ byte ) & 0x01;
+			crc >>= 1;
+			if ( mix ) crc ^= 0x8C;
+			byte >>= 1;
+		}
 	}
-	return n;
+	return crc;
 }
 
-void therm_write_byte(uint8_t byte)
+static void ds18b20match( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom )
 {
-	uint8_t i=8;
-	while(i--)
+	//Perform ROM match operation on DS18B20 devices
+	//Or skip ROM matching if ptr is NULL
+
+	uint8_t i = 0;
+
+	//If rom pointer is NULL then read temperature without matching.
+	if ( rom == NULL )
 	{
-		//Write actual bit and shift one position right to make the next bit ready
-		therm_write_bit(byte&1);
-		byte>>=1;
+		//Skip ROM
+		onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_SKIP_ROM );
+	}
+	else
+	{
+		//Match ROM
+		onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_MATCH_ROM );
+		for ( i = 0; i < 8; i++ )
+			onewireWrite( port, direction, portin, mask, rom[i] );
 	}
 }
 
-uint16_t therm_read_temperature()
+uint8_t ds18b20convert( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom )
 {
-	uint8_t temperature[2];
-	int8_t digit;
-	uint16_t decimal;
-	uint16_t temp;
-	//Reset, skip ROM and start temperature conversion
-	therm_reset();
-	therm_write_byte(THERM_CMD_SKIPROM);
-	therm_write_byte(THERM_CMD_CONVERTTEMP);
-	//Wait until conversion is complete
-	//TODO: DANGEROUS! CAN hang in case of temp sensor failure!
-	while(!therm_read_bit());
-	//Reset, skip ROM and send command to read Scratchpad
-	therm_reset();
-	therm_write_byte(THERM_CMD_SKIPROM);
-	therm_write_byte(THERM_CMD_RSCRATCHPAD);
-	//Read Scratchpad (only 2 first bytes)
-	temperature[0]=therm_read_byte();
-	temperature[1]=therm_read_byte();
-	therm_reset();
-	//Store temperature integer digits and decimal digits
-	digit=temperature[0]>>4;
-	digit|=(temperature[1]&0x7)<<4;
-	//Store decimal digits
-	decimal=temperature[0]&0xf;
-	decimal*=THERM_DECIMAL_STEPS_12BIT;
-	//results
-	//*digi = digit;
-	//*deci = decimal;
-	temp=digit*10+decimal/1000;
-	return temp;
+	//Send conversion request to DS18B20 on one wire bus
+
+	//Communication check
+	if ( onewireInit( port, direction, portin, mask ) == ONEWIRE_ERROR_COMM )
+		return DS18B20_ERROR_COMM;
+
+	//ROM match (or not)
+	ds18b20match( port, direction, portin, mask, rom );
+
+	//Convert temperature
+	onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_CONVERT );
+
+	return DS18B20_ERROR_OK;
 }
 
+uint8_t ds18b20rsp( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom, uint8_t *sp )
+{
+	//Read DS18B20 scratchpad
+
+	uint8_t i = 0;
+
+	//Communication check
+	if ( onewireInit( port, direction, portin, mask ) == ONEWIRE_ERROR_COMM )
+		return DS18B20_ERROR_COMM;
+
+	//Match (or not) ROM
+	ds18b20match( port, direction, portin, mask, rom );
+
+	//Read scratchpad
+	onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_READ_SP );
+	for ( i = 0; i < 9; i++ )
+		sp[i] = onewireRead( port, direction, portin, mask );
+
+	//Check pull-up
+	if ( *( (uint64_t*) sp ) == 0 )
+		return DS18B20_ERROR_PULL;
+
+	//CRC check
+	if ( ds18b20crc8( sp, 8 ) != sp[8] )
+		return DS18B20_ERROR_CRC;
+
+	return DS18B20_ERROR_OK;
+}
+
+uint8_t ds18b20wsp( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom, uint8_t th, uint8_t tl, uint8_t conf )
+{
+	//Writes DS18B20 scratchpad
+	//th - thermostat high temperature
+	//tl - thermostat low temperature
+	//conf - configuration byte
+
+	//Communication check
+	if ( onewireInit( port, direction, portin, mask ) == ONEWIRE_ERROR_COMM )
+		return DS18B20_ERROR_COMM;
+
+	//ROM match (or not)
+	ds18b20match( port, direction, portin, mask, rom );
+
+	//Write scratchpad
+	onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_WRITE_SP );
+	onewireWrite( port, direction, portin, mask, th );
+	onewireWrite( port, direction, portin, mask, tl );
+	onewireWrite( port, direction, portin, mask, conf );
+
+	return DS18B20_ERROR_OK;
+}
+
+uint8_t ds18b20csp( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom )
+{
+	//Copies DS18B20 scratchpad contents to its EEPROM
+
+	//Communication check
+	if ( onewireInit( port, direction, portin, mask ) == ONEWIRE_ERROR_COMM )
+		return DS18B20_ERROR_COMM;
+
+	//ROM match (or not)
+	ds18b20match( port, direction, portin, mask, rom );
+
+	//Copy scratchpad
+	onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_COPY_SP );
+
+	//Set pin high
+	//Poor DS18B20 feels better then...
+	*port |= mask;
+	*direction |= mask;
+
+	return DS18B20_ERROR_OK;
+}
+
+uint8_t ds18b20read( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom, int16_t *temperature )
+{
+	//Read temperature from DS18B20
+	//Note: returns actual temperature * 16
+
+	uint8_t sp[9];
+	uint8_t ec = 0;
+
+	//Communication, pull-up, CRC checks happen here
+	ec = ds18b20rsp( port, direction, portin, mask, rom, sp );
+
+	if ( ec != DS18B20_ERROR_OK )
+	{
+		*temperature = 0;
+		return ec;
+	}
+
+
+	*temperature = sp[0] | (sp[1] << 8);
+
+	return DS18B20_ERROR_OK;
+}
+
+
+
+uint8_t ds18b20rom( volatile uint8_t *port, volatile uint8_t *direction, volatile uint8_t *portin, uint8_t mask, uint8_t *rom )
+{
+	//Read DS18B20 rom
+
+	unsigned char i = 0;
+
+	if ( rom == NULL ) return DS18B20_ERROR_OTHER;
+
+	//Communication check
+	if ( onewireInit( port, direction, portin, mask ) == ONEWIRE_ERROR_COMM )
+		return DS18B20_ERROR_COMM;
+
+	//Read ROM
+	onewireWrite( port, direction, portin, mask, DS18B20_COMMAND_READ_ROM );
+	for ( i = 0; i < 8; i++ )
+		rom[i] = onewireRead( port, direction, portin, mask );
+
+	//Pull-up check
+	if ( ( rom[0] | rom[1] | rom[2] | rom[3] | rom[4] | rom[5] | rom[6] | rom[7] ) == 0 ) return DS18B20_ERROR_PULL;
+
+	//Check CRC
+	if ( ds18b20crc8( rom, 7 ) != rom[7] )
+	{
+		for ( i = 0; i < 8; i++ ) rom[i] = 0;
+		return DS18B20_ERROR_CRC;
+	}
+
+	return DS18B20_ERROR_OK;
+}

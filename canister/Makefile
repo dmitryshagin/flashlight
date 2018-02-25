@@ -2,7 +2,7 @@
 DEVICE     = atmega168p
 CLOCK      = 3686400L
 PROGRAMMER = -c usbasp
-OBJECTS    = globals.o main.o uart.o uart_proto.o init.o ds18b20.o adc.o
+OBJECTS    = globals.o main.o uart.o uart_proto.o init.o ds18b20.o adc.o onewire.o romsearch.o
 BAUD	   = 1
 PORT       = /dev/tty.wchusbserial1420
 

@@ -25,8 +25,7 @@ static void reply_OK(){
 
 static uint8_t reply_with_status(){
     char _tmpstr[UART_TX0_BUFFER_SIZE];
-    
-    sprintf(_tmpstr, "< %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2]);
+    sprintf(_tmpstr, "< %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], temp);
     uart0_puts(_tmpstr);
     return 0;
 }
@@ -73,7 +72,7 @@ void process_uart(void){
         	for(buffer_pos=MAX_COMMAND_LENGTH-1;buffer_pos>0;buffer_pos--){rxBuffer[buffer_pos]=0;}
         	rxBuffer[buffer_pos++]=c;
         }else if((c=='\0'||c=='\r')){
-            setLED(255,0,0);
+            setLED(0xFF,0,0);
         	processCommand(buffer_pos);
 	        for(i=0;i<MAX_COMMAND_LENGTH;i++){rxBuffer[i]=0;}
                 setLED(0,0,0);

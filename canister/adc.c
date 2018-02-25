@@ -4,7 +4,6 @@
 
 volatile uint8_t adc_inputs[] = { 0, 6, 7 }; //outputs to measure
 volatile uint16_t adc_reads[] = { 0, 0, 0 }; //for internal use
-// volatile uint16_t adc_values[] = { 0, 0, 0 }; //for external use
 
 volatile uint16_t voltage_window[] = { 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023 };
 volatile uint16_t current_window[] = { 512,  512,  512,  512,  512,  512,  512,  512,  512,  512 };
@@ -15,7 +14,7 @@ ISR(ADC_vect){
 	adc_reads[current_adc_input_idx] = ADCW;
 }
 
-void process_adc(){
+void get_adc(){
 	uint8_t i;
 	uint32_t avg_data = 0;
 	if(global_counter != last_processed_counter){
@@ -51,4 +50,8 @@ void process_adc(){
 		ADCSRA |= 1 << ADSC;
 		_delay_us(10);//to stabilize
 	}
+}
+
+void process_adc(){
+	//TODO: what should we do with our shiny ADC data? Switch led os stull like that?
 }

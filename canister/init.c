@@ -4,11 +4,53 @@
 #include <stdio.h>
 #include "init.h"
 #include "uart.h"
-#include "ds18b20.h"
 
 ISR(TIMER2_OVF_vect){ // ~100Hz
 	TCNT2 = TIMER_TUNE;
 	global_counter++;
+}
+
+ISR(INT0_vect){
+	cli();
+	EIMSK &= ~(1<<0);
+	
+	_delay_ms(5);
+	if(PIND & (1<<PIND2)){ //will ignore very short pulsed
+		return;
+	}
+	OUT_INVERT;
+	_delay_ms(1);
+	if( (PINC & (1<<PC2)) ){
+		turn_everything_on();
+	}
+	processLED();
+	wdt_enable(WDTO_4S);
+	while(!(PIND & (1<<PIND2))){_delay_ms(50);}
+	reset_wdt();
+	if( (PINC & (1<<PC2)) ){
+		turn_everything_on();
+	}
+	_delay_ms(50); //we dont want to swith too often;
+	sei();
+}
+
+ISR(INT1_vect){ //external power is on!
+	cli();
+	EIMSK &= ~(1<<1); //turn off int1. TODO: reenable before sleep!
+	OUT_ON;
+	_delay_ms(2);
+	sei();
+}
+
+
+void processTemp(){
+	if(last_processed_counter == global_counter){
+		return;
+	}
+	if(global_counter % 100 == 0){
+		ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, &temp );
+		ds18b20convert( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL );
+	}
 }
 
 
@@ -65,31 +107,58 @@ void pwr_measure_off(){
 
 void pwr_measure_init(){
 	DDRC |= (1 << PC5);
-	pwr_measure_on();
 }
 
+void interrupts_init(){
+	PORTD |= (1 << PD2) | (1 << PD3); //internal pullups;
+	EIMSK = (1<<0); //turn on only INT0. will turn INT1 only before sleep;
+	EICRA = 0x00; //INT0 & INT1 - low level
+}
+
+void init_leakage(){
+	PORTC |= (1 << PC4);
+}
+
+void processLeakage(){
+	leakage = (PINC & (1<<PC3)) ? 0 : 1;
+}
+
+void bt_init(){
+	DDRD |=  (1 << PD4);
+	DDRD |=  (1 << PD5);
+	DDRD |=  (1 << PD7);
+	BT_PWR_ON;
+	BT_CMD_OFF;
+	BT_RESET_OFF;
+}
+
+void turn_everything_on(){
+	init_timer();
+	init_adc();
+	WTR_SENS_ON;
+	pwr_measure_on();
+	bt_init();
+}
+
+void turn_everything_off(){
+	WTR_SENS_OFF;
+	pwr_measure_off();
+	BT_PWR_OFF;
+	setLED(0,0,0);
+}
 
 void init(){
 	reset_wdt();
 	init_LED();
 	uart0_init(UART_BAUD_SELECT(38400UL, F_CPU));
-	init_timer();
-	init_adc();
 	pwr_measure_init();
+	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
+	init_leakage();
+	interrupts_init();
+
+	turn_everything_on();
 
 	OUT_OFF;
 
-	// (PORTD &= ~(1<<4)); //turn off key for BT module
-	// wdt_disable();
-	// wdt_enable(WDTO_500MS);
-
-	// WDTCSR = (1<<WDIE) | (1<<WDP0) | (1<<WDP1);	//will apply changes in 0.1 second with WDT
-	
-
-	// EIMSK = 0x01; //Enable INT0
-
-	// EIMSK = 0x03; //Enable both INT0 and INT1
-	// EICRA = 0x08; //INT0 - low level (to be detected in deep sleep), INT1 - on Falling edge (will work when on)
-	// EICRA = 0x00; //INT0 & INT1 - low level
 	sei();
 }
