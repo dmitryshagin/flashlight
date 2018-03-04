@@ -53,5 +53,14 @@ void get_adc(){
 }
 
 void process_adc(){
+	if(global_counter < 25){
+		return; //do nothing if we just woke up
+	}
+	
+	if(adc_values[2] > adc_values[1] && (adc_values[2] - adc_values[1]) > 2){ //are we charging?
+		is_charging = 1;
+	} else {
+		is_charging = 0;
+	}
 	//TODO: what should we do with our shiny ADC data? Switch led os stull like that?
 }

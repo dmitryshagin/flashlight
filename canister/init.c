@@ -14,22 +14,23 @@ ISR(INT0_vect){
 	cli();
 	EIMSK &= ~(1<<0);
 	
-	_delay_ms(5);
+	_delay_ms(1);
 	if(PIND & (1<<PIND2)){ //will ignore very short pulsed
+		sei();
 		return;
 	}
-	OUT_INVERT;
-	_delay_ms(1);
-	if( (PINC & (1<<PC2)) ){
-		turn_everything_on();
-	}
-	processLED();
+	is_on = 1 - is_on;
+	// _delay_ms(25);
+	// processLED();
 	wdt_enable(WDTO_4S);
-	while(!(PIND & (1<<PIND2))){_delay_ms(50);}
-	reset_wdt();
-	if( (PINC & (1<<PC2)) ){
+	if( is_on ){
 		turn_everything_on();
+		setLED(0,0xFF,0);
+	}else{
+		setLED(0,0,0);
 	}
+	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
+	reset_wdt();
 	_delay_ms(50); //we dont want to swith too often;
 	sei();
 }
@@ -37,7 +38,7 @@ ISR(INT0_vect){
 ISR(INT1_vect){ //external power is on!
 	cli();
 	EIMSK &= ~(1<<1); //turn off int1. TODO: reenable before sleep!
-	OUT_ON;
+	is_on = 1;
 	_delay_ms(2);
 	sei();
 }
@@ -138,6 +139,8 @@ void turn_everything_on(){
 	WTR_SENS_ON;
 	pwr_measure_on();
 	bt_init();
+	OUT_ON;
+	is_on = 1;
 }
 
 void turn_everything_off(){
@@ -145,6 +148,8 @@ void turn_everything_off(){
 	pwr_measure_off();
 	BT_PWR_OFF;
 	setLED(0,0,0);
+	is_on = 0;
+	OUT_OFF;
 }
 
 void init(){
@@ -156,9 +161,7 @@ void init(){
 	init_leakage();
 	interrupts_init();
 
-	turn_everything_on();
-
-	OUT_OFF;
+	turn_everything_off();
 
 	sei();
 }

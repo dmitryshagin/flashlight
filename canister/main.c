@@ -18,7 +18,7 @@ void go_to_sleep(){
 
 
 void processLED(){
-	if( (PINC & (1<<PC2)) ){ //Is output on?
+	if( is_on ){ //Is output on?
 		if(leakage){
 			int8_t blinker = (global_counter % 0x20) - 0xF;
 			uint8_t val = 0;
@@ -29,8 +29,19 @@ void processLED(){
 			}
 			setLED(val,0,0);
 		}else{
-			//TODO - led by voltage
-			setLED(0,0,0xFF);
+			if(is_charging){
+				int8_t blinker = ((global_counter / 5) % 0x20) - 0xF;
+				uint8_t val = 0;
+				if(blinker < 0){
+					val = 0xFF - blinker * 0xF;
+				}else{
+					val = blinker * 0xF;
+				}
+				setLED(0,val,0);
+			}else{
+				//TODO - led by voltage
+				setLED(0,0xFF,0);
+			}
 		}
 	}else{
 		setLED(0,0,0);
@@ -40,7 +51,13 @@ void processLED(){
 
 void processState(){
 	processLED();
-	if( (PINC & (1<<PC2)) ){ //Is output on?
+	if(is_on){
+		OUT_ON;
+	}else{
+		OUT_OFF;
+	}
+	if(is_on){ //Is output on?
+
 		// we''l have overlapping interrupts if we react on both int0 and int1
 		// EIMSK &= ~(1<<1);
 		//TODO - check voltage
@@ -54,7 +71,8 @@ int main(void){
 	init();
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	OUT_OFF;
+	go_to_sleep();
+
 
 	for(;;){
 		process_uart();

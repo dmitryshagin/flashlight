@@ -75,7 +75,6 @@ void process_uart(void){
             setLED(0xFF,0,0);
         	processCommand(buffer_pos);
 	        for(i=0;i<MAX_COMMAND_LENGTH;i++){rxBuffer[i]=0;}
-                setLED(0,0,0);
         }else{
         	rxBuffer[buffer_pos++]=c;
         }
