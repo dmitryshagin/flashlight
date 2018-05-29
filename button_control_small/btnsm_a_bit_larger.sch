@@ -13640,7 +13640,7 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <part name="GND22" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="PAD2" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="SMD1,27-254" package3d_urn="urn:adsk.eagle:package:30839/1" value="WTR_IN"/>
 <part name="SUPPLY4" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device=""/>
-<part name="3V3_SWITCHED" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="SMD1,27-254" package3d_urn="urn:adsk.eagle:package:30839/1" value="3V3"/>
+<part name="3V3" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="SMD1,27-254" package3d_urn="urn:adsk.eagle:package:30839/1" value="3V3"/>
 <part name="IC1" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="LP298X" device="S"/>
 <part name="C11" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:26136/1" value="10n"/>
 <part name="GND23" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
@@ -13660,13 +13660,13 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <part name="R35" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/2" value="100k"/>
 <part name="Q8" library="SparkFun-DiscreteSemi" library_urn="urn:adsk.eagle:library:514" deviceset="MOSFET_PCH" device="-IRLML2244" package3d_urn="urn:adsk.eagle:package:38446/1" value="4.3A/20V/54mΩ"/>
 <part name="R38" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/2" value="100k"/>
-<part name="R39" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="250k 1%"/>
+<part name="R39" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="270k 1%"/>
 <part name="R2" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="100k 1%"/>
 <part name="R4" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="200k 1%"/>
 <part name="R33" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="100k 1%"/>
 <part name="R34" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="200k 1%"/>
 <part name="R36" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="100k 1%"/>
-<part name="R37" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="100k 1%"/>
+<part name="R37" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="120k 1%"/>
 <part name="4.2" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="SMD1,27-254" package3d_urn="urn:adsk.eagle:package:30839/1" value="4.2"/>
 <part name="8.4" library="wirepad" library_urn="urn:adsk.eagle:library:412" deviceset="WIREPAD" device="SMD1,27-254" package3d_urn="urn:adsk.eagle:package:30839/1" value="8.4"/>
 <part name="SUPPLY6" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device=""/>
@@ -13714,6 +13714,10 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <part name="R48" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/2" value="200"/>
 <part name="GND33" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="R49" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/2" value="100k"/>
+<part name="R50" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="6.2k 1%"/>
+<part name="R51" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="RESISTOR" device="0805" package3d_urn="urn:adsk.eagle:package:39651/1" value="6.2k 1%"/>
+<part name="SUPPLY8" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device=""/>
+<part name="SUPPLY9" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -13822,7 +13826,7 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <instance part="GND22" gate="1" x="17.78" y="58.42"/>
 <instance part="PAD2" gate="G$1" x="231.14" y="261.62" rot="R180"/>
 <instance part="SUPPLY4" gate="G$1" x="180.34" y="281.94"/>
-<instance part="3V3_SWITCHED" gate="G$1" x="172.72" y="276.86"/>
+<instance part="3V3" gate="G$1" x="172.72" y="276.86"/>
 <instance part="IC1" gate="G$1" x="0" y="-25.4" rot="R270"/>
 <instance part="C11" gate="G$1" x="12.7" y="-33.02"/>
 <instance part="GND23" gate="1" x="12.7" y="-40.64"/>
@@ -13896,6 +13900,10 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <instance part="R48" gate="G$1" x="368.3" y="218.44" rot="R180"/>
 <instance part="GND33" gate="1" x="266.7" y="88.9" rot="MR0"/>
 <instance part="R49" gate="G$1" x="266.7" y="99.06" rot="MR270"/>
+<instance part="R50" gate="G$1" x="269.24" y="116.84" rot="R90"/>
+<instance part="R51" gate="G$1" x="317.5" y="116.84" rot="R90"/>
+<instance part="SUPPLY8" gate="G$1" x="269.24" y="124.46"/>
+<instance part="SUPPLY9" gate="G$1" x="317.5" y="124.46"/>
 </instances>
 <busses>
 </busses>
@@ -14232,8 +14240,16 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <net name="AREF" class="2">
 <segment>
 <pinref part="U5" gate="A" pin="CATHODE"/>
-<wire x1="434.34" y1="203.2" x2="452.12" y2="203.2" width="0.1524" layer="91"/>
+<wire x1="434.34" y1="203.2" x2="441.96" y2="203.2" width="0.1524" layer="91"/>
 <label x="444.5" y="203.2" size="1.778" layer="95"/>
+<pinref part="R48" gate="G$1" pin="1"/>
+<pinref part="R46" gate="G$1" pin="2"/>
+<wire x1="441.96" y1="203.2" x2="452.12" y2="203.2" width="0.1524" layer="91"/>
+<wire x1="373.38" y1="218.44" x2="386.08" y2="218.44" width="0.1524" layer="91"/>
+<wire x1="386.08" y1="218.44" x2="441.96" y2="218.44" width="0.1524" layer="91"/>
+<wire x1="441.96" y1="218.44" x2="441.96" y2="203.2" width="0.1524" layer="91"/>
+<junction x="386.08" y="218.44"/>
+<junction x="441.96" y="203.2"/>
 </segment>
 <segment>
 <pinref part="IC2" gate="G$1" pin="AREF"/>
@@ -14632,7 +14648,7 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <pinref part="SUPPLY4" gate="G$1" pin="VCC"/>
 <wire x1="180.34" y1="276.86" x2="180.34" y2="271.78" width="0.1524" layer="91"/>
 <wire x1="180.34" y1="281.94" x2="180.34" y2="279.4" width="0.1524" layer="91"/>
-<pinref part="3V3_SWITCHED" gate="G$1" pin="P"/>
+<pinref part="3V3" gate="G$1" pin="P"/>
 <wire x1="175.26" y1="276.86" x2="180.34" y2="276.86" width="0.1524" layer="91"/>
 <junction x="180.34" y="276.86"/>
 </segment>
@@ -14641,6 +14657,16 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <wire x1="157.48" y1="228.6" x2="132.08" y2="228.6" width="0.1524" layer="91"/>
 <pinref part="SUPPLY6" gate="G$1" pin="VCC"/>
 <wire x1="132.08" y1="236.22" x2="132.08" y2="228.6" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="SUPPLY8" gate="G$1" pin="VCC"/>
+<pinref part="R50" gate="G$1" pin="2"/>
+<wire x1="269.24" y1="124.46" x2="269.24" y2="121.92" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="SUPPLY9" gate="G$1" pin="VCC"/>
+<pinref part="R51" gate="G$1" pin="2"/>
+<wire x1="317.5" y1="124.46" x2="317.5" y2="121.92" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="RX(UC)" class="0">
@@ -14714,8 +14740,12 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 </segment>
 <segment>
 <pinref part="IC3" gate="G$1" pin="SDA"/>
-<wire x1="307.34" y1="99.06" x2="320.04" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="307.34" y1="99.06" x2="317.5" y2="99.06" width="0.1524" layer="91"/>
 <label x="309.88" y="99.06" size="1.778" layer="95"/>
+<pinref part="R51" gate="G$1" pin="1"/>
+<wire x1="317.5" y1="99.06" x2="320.04" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="317.5" y1="111.76" x2="317.5" y2="99.06" width="0.1524" layer="91"/>
+<junction x="317.5" y="99.06"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -14756,8 +14786,12 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 </segment>
 <segment>
 <pinref part="IC3" gate="G$1" pin="SCL"/>
-<wire x1="274.32" y1="106.68" x2="261.62" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="274.32" y1="106.68" x2="269.24" y2="106.68" width="0.1524" layer="91"/>
 <label x="264.16" y="106.68" size="1.778" layer="95"/>
+<pinref part="R50" gate="G$1" pin="1"/>
+<wire x1="269.24" y1="106.68" x2="261.62" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="269.24" y1="111.76" x2="269.24" y2="106.68" width="0.1524" layer="91"/>
+<junction x="269.24" y="106.68"/>
 </segment>
 </net>
 <net name="N$3" class="0">
@@ -15073,13 +15107,6 @@ http://search.murata.co.jp/Ceramy/image/img/PDF/ENG/L0075S0103LQH2MC_02.pdf</des
 <pinref part="R47" gate="G$1" pin="2"/>
 <wire x1="386.08" y1="203.2" x2="386.08" y2="198.12" width="0.1524" layer="91"/>
 <junction x="386.08" y="203.2"/>
-</segment>
-</net>
-<net name="N$25" class="0">
-<segment>
-<pinref part="R48" gate="G$1" pin="1"/>
-<pinref part="R46" gate="G$1" pin="2"/>
-<wire x1="373.38" y1="218.44" x2="386.08" y2="218.44" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$26" class="2">
