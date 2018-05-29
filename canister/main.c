@@ -5,21 +5,13 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include "init.h"
+#include "adc.h"
+#include "uart.h"
 #include "uart_proto.h"
 
-void go_to_sleep(){
-	last_processed_counter = 0;
-	global_counter = 1;
-	turn_everything_off();
-	EIMSK |= (1<<0);
-	EIMSK |= (1<<1);
-	sleep_mode();
-}
-
-
-void processLED(){
+void process_LED(){
 	if( is_on ){ //Is output on?
-		if(leakage){
+		if(is_leaking){
 			int8_t blinker = (global_counter % 0x20) - 0xF;
 			uint8_t val = 0;
 			if(blinker < 0){
@@ -27,7 +19,7 @@ void processLED(){
 			}else{
 				val = blinker * 0xF;
 			}
-			setLED(val,0,0);
+			set_LED(val,0,0);
 		}else{
 			if(is_charging){
 				int8_t blinker = ((global_counter / 5) % 0x20) - 0xF;
@@ -37,33 +29,61 @@ void processLED(){
 				}else{
 					val = blinker * 0xF;
 				}
-				setLED(0,val,0);
+				// set_LED(0,val,0);
+				//TODO - fine-tune voltages
+				// if(adc_values[0] < 800){
+					set_LED(0,0,val);
+				// }else{
+					// set_LED(0,val,0);
+				// }
 			}else{
-				//TODO - led by voltage
-				setLED(0,0xFF,0);
+				//TODO: ugly hack. need to calculate proper value for ADC limits.
+				//TODO; need some hysteresis to prevent multible swithing on borders
+				//now 934 = 12.6V
+				//let's limit at 10 & 10.8V;
+				if(adc_values[0] < 740){
+					set_LED(0xFF,0,0);
+				}else if(adc_values[0] < 800){
+					set_LED(0,0,0xFF);
+				}else{
+					set_LED(0,0xFF,0);
+				}
 			}
 		}
 	}else{
-		setLED(0,0,0);
+		set_LED(0,0,0);
 	}
 }
 
+void clear_int0_pin(){
+	wdt_enable(WDTO_4S);
+	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
+	reset_wdt();
+	should_off = 0;
+	should_on = 0;
+	EIMSK |= (1<<0);
+}
 
-void processState(){
-	processLED();
-	if(is_on){
-		OUT_ON;
-	}else{
-		OUT_OFF;
+void process_state(){
+	if(should_on){
+		if(!is_on){
+			turn_on();
+			set_LED(0,0xFF,0);
+			clear_int0_pin();
+		}
 	}
-	if(is_on){ //Is output on?
 
-		// we''l have overlapping interrupts if we react on both int0 and int1
-		// EIMSK &= ~(1<<1);
-		//TODO - check voltage
-		
-	}else{
-		go_to_sleep();
+	if(should_off){
+		if(is_on){
+			set_LED(0,0,0);
+			clear_int0_pin();
+			turn_off();
+		}
+	}
+	if(is_on){
+		if(!(PINB & (1<<PB3))){ //Emergency condition - overcurrent!
+			turn_off();
+		}
 	}
 }
 
@@ -71,19 +91,26 @@ int main(void){
 	init();
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	go_to_sleep();
-
+	turn_off();
 
 	for(;;){
+		process_state();
+		process_leakage();
 		process_uart();
 		get_adc();
 		process_adc();
-		processTemp();
-		processLeakage();
-		processState();
-		EIMSK |= (1<<0);
-
+		process_temperature();
+		if(adc_ready){
+			process_LED();
+		}
+		
+		// char _tmpstr[UART_RX0_BUFFER_SIZE];
 		if(last_processed_counter != global_counter){
+			// if(adc_ready){
+				// sprintf(_tmpstr, "%04d\n\r", adc_values[0]);
+				// uart0_puts(_tmpstr);
+			// }
+
 			last_processed_counter = global_counter;
 		}
 	};

@@ -25,7 +25,7 @@ static void reply_OK(){
 
 static uint8_t reply_with_status(){
     char _tmpstr[UART_TX0_BUFFER_SIZE];
-    sprintf(_tmpstr, "< %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], temp);
+    sprintf(_tmpstr, "< %04d, %04d, %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature);
     uart0_puts(_tmpstr);
     return 0;
 }
@@ -35,8 +35,8 @@ static uint8_t temp_to_test(){
     return 0;
 }
 
-static uint8_t processCommand(uint16_t buffer_pos){
-  if(buffer_pos>=MAX_COMMAND_LENGTH||rxBuffer[0]!='>'){
+static uint8_t process_command(uint16_t buffer_pos){
+  if(buffer_pos >= MAX_COMMAND_LENGTH||rxBuffer[0]!='>'){
     return 0;
   }
   char * pch = strtok (rxBuffer," ");
@@ -65,15 +65,15 @@ void process_uart(void){
         if ( c & UART_OVERRUN_ERROR ){uart0_puts("<!E2 Overrun");}
         if ( c & UART_BUFFER_OVERFLOW ){uart0_puts("<!E3 Overflow");}
         if(buffer_pos <= 1 && (uint8_t)c == 'S'){ //reset on AVRBOOT commnd to enter bootloader
-            setLED(0xFF,0,0);
+            set_LED(0xFF,0,0);
             wdt_enable(WDTO_250MS); // Enable Watchdog Timer to give reset
         }
         if ((uint8_t)c == '>'){
         	for(buffer_pos=MAX_COMMAND_LENGTH-1;buffer_pos>0;buffer_pos--){rxBuffer[buffer_pos]=0;}
         	rxBuffer[buffer_pos++]=c;
         }else if((c=='\0'||c=='\r')){
-            setLED(0xFF,0,0);
-        	processCommand(buffer_pos);
+            set_LED(0xFF,0,0);
+        	process_command(buffer_pos);
 	        for(i=0;i<MAX_COMMAND_LENGTH;i++){rxBuffer[i]=0;}
         }else{
         	rxBuffer[buffer_pos++]=c;

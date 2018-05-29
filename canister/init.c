@@ -1,6 +1,7 @@
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <util/delay.h>
+#include <avr/sleep.h>
 #include <stdio.h>
 #include "init.h"
 #include "uart.h"
@@ -12,50 +13,48 @@ ISR(TIMER2_OVF_vect){ // ~100Hz
 
 ISR(INT0_vect){
 	cli();
-	EIMSK &= ~(1<<0);
+
+	// EIFR = 0b00000011;//lets clear interrupt flags
 	
 	_delay_ms(1);
 	if(PIND & (1<<PIND2)){ //will ignore very short pulsed
 		sei();
 		return;
 	}
-	is_on = 1 - is_on;
-	// _delay_ms(25);
-	// processLED();
-	wdt_enable(WDTO_4S);
-	if( is_on ){
-		turn_everything_on();
-		setLED(0,0xFF,0);
+	EIMSK &= ~(1<<0);
+
+	if(is_on){
+		should_on = 0;
+		should_off = 1;
 	}else{
-		setLED(0,0,0);
+		should_off = 0;
+		should_on = 1;
 	}
-	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
-	reset_wdt();
-	_delay_ms(50); //we dont want to swith too often;
 	sei();
 }
 
 ISR(INT1_vect){ //external power is on!
 	cli();
-	EIMSK &= ~(1<<1); //turn off int1. TODO: reenable before sleep!
-	is_on = 1;
+	// EIFR = 0b00000011;//lets clear interrupt flags
+	EIMSK &= ~(1<<1); //turn off int1. will reenable before sleep
+	should_on = 1;
 	_delay_ms(2);
 	sei();
 }
 
 
-void processTemp(){
+void process_temperature(){
 	if(last_processed_counter == global_counter){
 		return;
 	}
 	if(global_counter % 100 == 0){
-		ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, &temp );
+		ds18b20read( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, &temperature );
 		ds18b20convert( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL );
 	}
 }
 
 
-void setLED(uint8_t R, uint8_t G, uint8_t B){
+void set_LED(uint8_t R, uint8_t G, uint8_t B){
 	OCR1B = R;
 	OCR0A = 0xFF - G; // For unknown reason this PWM channer works better in inverse mode.
 	OCR1A = B;
@@ -84,10 +83,8 @@ void init_timer(){
 }
 
 void init_adc(){
-	DDRC |= (1 << PC1); //set voltage divider switch to output
-
 	ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0) | (1 << ADIE); // /128 + int
-	ADMUX = (1 << REFS0); //AVCC as reference
+	ADMUX = 0; //AREF reference
 }
 
 void reset_wdt(){
@@ -98,17 +95,6 @@ void reset_wdt(){
 	wdt_disable();
 }
 
-void pwr_measure_on(){
-	PORTC &= ~(1 << PC5);
-}
-
-void pwr_measure_off(){
-	PORTC |= (1 << PC5);
-}
-
-void pwr_measure_init(){
-	DDRC |= (1 << PC5);
-}
 
 void interrupts_init(){
 	PORTD |= (1 << PD2) | (1 << PD3); //internal pullups;
@@ -116,52 +102,69 @@ void interrupts_init(){
 	EICRA = 0x00; //INT0 & INT1 - low level
 }
 
-void init_leakage(){
-	PORTC |= (1 << PC4);
-}
 
-void processLeakage(){
-	leakage = (PINC & (1<<PC3)) ? 0 : 1;
+void process_leakage(){
+	is_leaking = (PINC & (1<<PC3)) ? 0 : 1;
 }
 
 void bt_init(){
-	DDRD |=  (1 << PD4);
-	DDRD |=  (1 << PD5);
-	DDRD |=  (1 << PD7);
-	BT_PWR_ON;
-	BT_CMD_OFF;
-	BT_RESET_OFF;
+	// DDRD |=  (1 << PD4);
+	// DDRD |=  (1 << PD5);
+	// DDRD |=  (1 << PD7);
+	// BT_CMD_OFF;
+	// BT_RESET_OFF;
 }
 
-void turn_everything_on(){
+void turn_on(){
+	cli();
+	PRR &= ~(1 << PRUSART0); //reenable uart
+	PRR &= ~(1 << PRADC); //reenable adc
 	init_timer();
 	init_adc();
-	WTR_SENS_ON;
-	pwr_measure_on();
 	bt_init();
+	uart0_init(UART_BAUD_SELECT(38400UL, F_CPU));
+	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
+	PORTB |= (1 << PB3); // Pullup for overcurent input pin
+	LDO_ON;
 	OUT_ON;
+	MEASURE_ON;
 	is_on = 1;
+	sei();
 }
 
-void turn_everything_off(){
-	WTR_SENS_OFF;
-	pwr_measure_off();
-	BT_PWR_OFF;
-	setLED(0,0,0);
+void turn_off(){
+	cli();
+	//TODO: BT deinit
 	is_on = 0;
+	global_counter = 0;
+	adc_ready = 0;
+	ADCSRA = 0;
+	PRR |= (1 << PRUSART0) | (1 << PRADC); //disable uart & adc
+	PORTB &= ~(1 << PB0);//deinit DS18B20
+	DDRB &= ~(1 << PB0);//deinit DS18B20
+	set_LED(0,0,0);
+	PORTB &= ~(1 << PB3); // Remove pullup for overcurent input pin to reduce power consumption
 	OUT_OFF;
+	LDO_OFF;
+	MEASURE_OFF;
+
+	EIMSK |= (1<<0);
+	EIMSK |= (1<<1);
+	sei();
+	sleep_mode();
 }
+
+
 
 void init(){
 	reset_wdt();
 	init_LED();
-	uart0_init(UART_BAUD_SELECT(38400UL, F_CPU));
-	pwr_measure_init();
-	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
-	init_leakage();
 	interrupts_init();
+	bt_init();
 
-	turn_everything_off();
-
+	DDRB |= (1 << PB4); // Current Measure ouput pin -> output
+	DDRB |= (1 << PB5); // Main Output pin -> output
+	DDRD |= (1 << PD7); // LDO control output pin -> output
+	
 	sei();
 }

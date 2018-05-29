@@ -65,10 +65,10 @@
  */
 
 #define ENABLE_BOOT_LED
-#define BIPORT		PORTD
-#define BIDDR		DDRD
-#define BIPIN		PIND
-#define BIPNUM		PIND6
+#define BIPORT		PORTB
+#define BIDDR		DDRB
+#define BIPIN		PINB
+#define BIPNUM		PINB1
 
 
 #define DISABLE_WDT_AT_STARTUP

@@ -74,10 +74,10 @@
   65:main.c        ****  */
   66:main.c        **** 
   67:main.c        **** #define ENABLE_BOOT_LED
-  68:main.c        **** #define BIPORT		PORTD
-  69:main.c        **** #define BIDDR		DDRD
-  70:main.c        **** #define BIPIN		PIND
-  71:main.c        **** #define BIPNUM		PIND6
+  68:main.c        **** #define BIPORT		PORTB
+  69:main.c        **** #define BIDDR		DDRB
+  70:main.c        **** #define BIPIN		PINB
+  71:main.c        **** #define BIPNUM		PINB1
   72:main.c        **** 
   73:main.c        **** 
   74:main.c        **** #define DISABLE_WDT_AT_STARTUP
@@ -169,12 +169,12 @@
  121               	/* frame size = 0 */
  122               	/* stack size = 0 */
  123               	.L__stack_usage = 0
- 124               	.L3:
+ 124               	.L2:
  157:main.c        **** 	while (!(UART_STATUS & (1<<UART_TXREADY)));
  126               	.LM1:
  127 0000 9091 C000 		lds r25,192
  128 0004 95FF      		sbrs r25,5
- 129 0006 00C0      		rjmp .L3
+ 129 0006 00C0      		rjmp .L2
  158:main.c        **** 	UART_DATA = data;
  131               	.LM2:
  132 0008 8093 C600 		sts 198,r24
@@ -386,7 +386,7 @@
  199               	.Lscope3:
  201               	.global	__vector_default
  203               	__vector_default:
- 152:main.c        **** 	void __vector_default(void) { ; }
+ 152:main.c        **** #endif
  205               	.LM15:
  206               	.LFBB4:
  207               	/* prologue: function */
@@ -424,10 +424,10 @@
  328:main.c        **** #ifdef ENABLE_BOOT_LED	// LED ON
  329:main.c        **** 	BIPORT |= (1<<BIPNUM);	
  234               	.LM18:
- 235 000a 5E9A      		sbi 0xb,6
+ 235 000a 299A      		sbi 0x5,1
  330:main.c        **** 	BIDDR  |= (1<<BIPNUM);
  237               	.LM19:
- 238 000c 569A      		sbi 0xa,6
+ 238 000c 219A      		sbi 0x4,1
  331:main.c        **** #endif
  332:main.c        **** 
  333:main.c        **** 
@@ -459,18 +459,494 @@
  343:main.c        **** 	    WDTCSR=0;
  260               	.LM24:
  261 001e 1092 6000 		sts 96,__zero_reg__
+ 262               	.LBB32:
+ 263               	.LBB33:
+ 265               	.Ltext1:
+   1:/usr/lib/avr/include/avr/wdt.h **** /* Copyright (c) 2002, 2004 Marek Michalkiewicz
+   2:/usr/lib/avr/include/avr/wdt.h ****    Copyright (c) 2005, 2006, 2007 Eric B. Weddington
+   3:/usr/lib/avr/include/avr/wdt.h ****    All rights reserved.
+   4:/usr/lib/avr/include/avr/wdt.h **** 
+   5:/usr/lib/avr/include/avr/wdt.h ****    Redistribution and use in source and binary forms, with or without
+   6:/usr/lib/avr/include/avr/wdt.h ****    modification, are permitted provided that the following conditions are met:
+   7:/usr/lib/avr/include/avr/wdt.h **** 
+   8:/usr/lib/avr/include/avr/wdt.h ****    * Redistributions of source code must retain the above copyright
+   9:/usr/lib/avr/include/avr/wdt.h ****      notice, this list of conditions and the following disclaimer.
+  10:/usr/lib/avr/include/avr/wdt.h **** 
+  11:/usr/lib/avr/include/avr/wdt.h ****    * Redistributions in binary form must reproduce the above copyright
+  12:/usr/lib/avr/include/avr/wdt.h ****      notice, this list of conditions and the following disclaimer in
+  13:/usr/lib/avr/include/avr/wdt.h ****      the documentation and/or other materials provided with the
+  14:/usr/lib/avr/include/avr/wdt.h ****      distribution.
+  15:/usr/lib/avr/include/avr/wdt.h **** 
+  16:/usr/lib/avr/include/avr/wdt.h ****    * Neither the name of the copyright holders nor the names of
+  17:/usr/lib/avr/include/avr/wdt.h ****      contributors may be used to endorse or promote products derived
+  18:/usr/lib/avr/include/avr/wdt.h ****      from this software without specific prior written permission.
+  19:/usr/lib/avr/include/avr/wdt.h **** 
+  20:/usr/lib/avr/include/avr/wdt.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  21:/usr/lib/avr/include/avr/wdt.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  22:/usr/lib/avr/include/avr/wdt.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  23:/usr/lib/avr/include/avr/wdt.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  24:/usr/lib/avr/include/avr/wdt.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  25:/usr/lib/avr/include/avr/wdt.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  26:/usr/lib/avr/include/avr/wdt.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  27:/usr/lib/avr/include/avr/wdt.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  28:/usr/lib/avr/include/avr/wdt.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  29:/usr/lib/avr/include/avr/wdt.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  30:/usr/lib/avr/include/avr/wdt.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  31:/usr/lib/avr/include/avr/wdt.h **** 
+  32:/usr/lib/avr/include/avr/wdt.h **** /* $Id$ */
+  33:/usr/lib/avr/include/avr/wdt.h **** 
+  34:/usr/lib/avr/include/avr/wdt.h **** /*
+  35:/usr/lib/avr/include/avr/wdt.h ****    avr/wdt.h - macros for AVR watchdog timer
+  36:/usr/lib/avr/include/avr/wdt.h ****  */
+  37:/usr/lib/avr/include/avr/wdt.h **** 
+  38:/usr/lib/avr/include/avr/wdt.h **** #ifndef _AVR_WDT_H_
+  39:/usr/lib/avr/include/avr/wdt.h **** #define _AVR_WDT_H_
+  40:/usr/lib/avr/include/avr/wdt.h **** 
+  41:/usr/lib/avr/include/avr/wdt.h **** #include <avr/io.h>
+  42:/usr/lib/avr/include/avr/wdt.h **** #include <stdint.h>
+  43:/usr/lib/avr/include/avr/wdt.h **** 
+  44:/usr/lib/avr/include/avr/wdt.h **** /** \file */
+  45:/usr/lib/avr/include/avr/wdt.h **** /** \defgroup avr_watchdog <avr/wdt.h>: Watchdog timer handling
+  46:/usr/lib/avr/include/avr/wdt.h ****     \code #include <avr/wdt.h> \endcode
+  47:/usr/lib/avr/include/avr/wdt.h **** 
+  48:/usr/lib/avr/include/avr/wdt.h ****     This header file declares the interface to some inline macros
+  49:/usr/lib/avr/include/avr/wdt.h ****     handling the watchdog timer present in many AVR devices.  In order
+  50:/usr/lib/avr/include/avr/wdt.h ****     to prevent the watchdog timer configuration from being
+  51:/usr/lib/avr/include/avr/wdt.h ****     accidentally altered by a crashing application, a special timed
+  52:/usr/lib/avr/include/avr/wdt.h ****     sequence is required in order to change it.  The macros within
+  53:/usr/lib/avr/include/avr/wdt.h ****     this header file handle the required sequence automatically
+  54:/usr/lib/avr/include/avr/wdt.h ****     before changing any value.  Interrupts will be disabled during
+  55:/usr/lib/avr/include/avr/wdt.h ****     the manipulation.
+  56:/usr/lib/avr/include/avr/wdt.h **** 
+  57:/usr/lib/avr/include/avr/wdt.h ****     \note Depending on the fuse configuration of the particular
+  58:/usr/lib/avr/include/avr/wdt.h ****     device, further restrictions might apply, in particular it might
+  59:/usr/lib/avr/include/avr/wdt.h ****     be disallowed to turn off the watchdog timer.
+  60:/usr/lib/avr/include/avr/wdt.h **** 
+  61:/usr/lib/avr/include/avr/wdt.h ****     Note that for newer devices (ATmega88 and newer, effectively any
+  62:/usr/lib/avr/include/avr/wdt.h ****     AVR that has the option to also generate interrupts), the watchdog
+  63:/usr/lib/avr/include/avr/wdt.h ****     timer remains active even after a system reset (except a power-on
+  64:/usr/lib/avr/include/avr/wdt.h ****     condition), using the fastest prescaler value (approximately 15
+  65:/usr/lib/avr/include/avr/wdt.h ****     ms).  It is therefore required to turn off the watchdog early
+  66:/usr/lib/avr/include/avr/wdt.h ****     during program startup, the datasheet recommends a sequence like
+  67:/usr/lib/avr/include/avr/wdt.h ****     the following:
+  68:/usr/lib/avr/include/avr/wdt.h **** 
+  69:/usr/lib/avr/include/avr/wdt.h ****     \code
+  70:/usr/lib/avr/include/avr/wdt.h ****     #include <stdint.h>
+  71:/usr/lib/avr/include/avr/wdt.h ****     #include <avr/wdt.h>
+  72:/usr/lib/avr/include/avr/wdt.h **** 
+  73:/usr/lib/avr/include/avr/wdt.h ****     uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
+  74:/usr/lib/avr/include/avr/wdt.h **** 
+  75:/usr/lib/avr/include/avr/wdt.h ****     void get_mcusr(void) \
+  76:/usr/lib/avr/include/avr/wdt.h ****       __attribute__((naked)) \
+  77:/usr/lib/avr/include/avr/wdt.h ****       __attribute__((section(".init3")));
+  78:/usr/lib/avr/include/avr/wdt.h ****     void get_mcusr(void)
+  79:/usr/lib/avr/include/avr/wdt.h ****     {
+  80:/usr/lib/avr/include/avr/wdt.h ****       mcusr_mirror = MCUSR;
+  81:/usr/lib/avr/include/avr/wdt.h ****       MCUSR = 0;
+  82:/usr/lib/avr/include/avr/wdt.h ****       wdt_disable();
+  83:/usr/lib/avr/include/avr/wdt.h ****     }
+  84:/usr/lib/avr/include/avr/wdt.h ****     \endcode
+  85:/usr/lib/avr/include/avr/wdt.h **** 
+  86:/usr/lib/avr/include/avr/wdt.h ****     Saving the value of MCUSR in \c mcusr_mirror is only needed if the
+  87:/usr/lib/avr/include/avr/wdt.h ****     application later wants to examine the reset source, but in particular, 
+  88:/usr/lib/avr/include/avr/wdt.h ****     clearing the watchdog reset flag before disabling the
+  89:/usr/lib/avr/include/avr/wdt.h ****     watchdog is required, according to the datasheet.
+  90:/usr/lib/avr/include/avr/wdt.h **** */
+  91:/usr/lib/avr/include/avr/wdt.h **** 
+  92:/usr/lib/avr/include/avr/wdt.h **** /**
+  93:/usr/lib/avr/include/avr/wdt.h ****    \ingroup avr_watchdog
+  94:/usr/lib/avr/include/avr/wdt.h ****    Reset the watchdog timer.  When the watchdog timer is enabled,
+  95:/usr/lib/avr/include/avr/wdt.h ****    a call to this instruction is required before the timer expires,
+  96:/usr/lib/avr/include/avr/wdt.h ****    otherwise a watchdog-initiated device reset will occur. 
+  97:/usr/lib/avr/include/avr/wdt.h **** */
+  98:/usr/lib/avr/include/avr/wdt.h **** 
+  99:/usr/lib/avr/include/avr/wdt.h **** #define wdt_reset() __asm__ __volatile__ ("wdr")
+ 100:/usr/lib/avr/include/avr/wdt.h **** 
+ 101:/usr/lib/avr/include/avr/wdt.h **** 
+ 102:/usr/lib/avr/include/avr/wdt.h **** #if defined(WDP3)
+ 103:/usr/lib/avr/include/avr/wdt.h **** # define _WD_PS3_MASK       _BV(WDP3)
+ 104:/usr/lib/avr/include/avr/wdt.h **** #else
+ 105:/usr/lib/avr/include/avr/wdt.h **** # define _WD_PS3_MASK       0x00
+ 106:/usr/lib/avr/include/avr/wdt.h **** #endif
+ 107:/usr/lib/avr/include/avr/wdt.h **** 
+ 108:/usr/lib/avr/include/avr/wdt.h **** #if defined(WDTCSR)
+ 109:/usr/lib/avr/include/avr/wdt.h **** #  define _WD_CONTROL_REG     WDTCSR
+ 110:/usr/lib/avr/include/avr/wdt.h **** #elif defined(WDTCR)
+ 111:/usr/lib/avr/include/avr/wdt.h **** #  define _WD_CONTROL_REG     WDTCR
+ 112:/usr/lib/avr/include/avr/wdt.h **** #else
+ 113:/usr/lib/avr/include/avr/wdt.h **** #  define _WD_CONTROL_REG     WDT
+ 114:/usr/lib/avr/include/avr/wdt.h **** #endif
+ 115:/usr/lib/avr/include/avr/wdt.h **** 
+ 116:/usr/lib/avr/include/avr/wdt.h **** #if defined(WDTOE)
+ 117:/usr/lib/avr/include/avr/wdt.h **** #define _WD_CHANGE_BIT      WDTOE
+ 118:/usr/lib/avr/include/avr/wdt.h **** #else
+ 119:/usr/lib/avr/include/avr/wdt.h **** #define _WD_CHANGE_BIT      WDCE
+ 120:/usr/lib/avr/include/avr/wdt.h **** #endif
+ 121:/usr/lib/avr/include/avr/wdt.h **** 
+ 122:/usr/lib/avr/include/avr/wdt.h **** 
+ 123:/usr/lib/avr/include/avr/wdt.h **** /**
+ 124:/usr/lib/avr/include/avr/wdt.h ****    \ingroup avr_watchdog
+ 125:/usr/lib/avr/include/avr/wdt.h ****    Enable the watchdog timer, configuring it for expiry after
+ 126:/usr/lib/avr/include/avr/wdt.h ****    \c timeout (which is a combination of the \c WDP0 through
+ 127:/usr/lib/avr/include/avr/wdt.h ****    \c WDP2 bits to write into the \c WDTCR register; For those devices 
+ 128:/usr/lib/avr/include/avr/wdt.h ****    that have a \c WDTCSR register, it uses the combination of the \c WDP0 
+ 129:/usr/lib/avr/include/avr/wdt.h ****    through \c WDP3 bits).
+ 130:/usr/lib/avr/include/avr/wdt.h **** 
+ 131:/usr/lib/avr/include/avr/wdt.h ****    See also the symbolic constants \c WDTO_15MS et al.
+ 132:/usr/lib/avr/include/avr/wdt.h **** */
+ 133:/usr/lib/avr/include/avr/wdt.h **** 
+ 134:/usr/lib/avr/include/avr/wdt.h **** 
+ 135:/usr/lib/avr/include/avr/wdt.h **** #if defined(__AVR_XMEGA__)
+ 136:/usr/lib/avr/include/avr/wdt.h **** 
+ 137:/usr/lib/avr/include/avr/wdt.h **** /*
+ 138:/usr/lib/avr/include/avr/wdt.h ****    wdt_enable(timeout) for xmega devices
+ 139:/usr/lib/avr/include/avr/wdt.h **** ** write signature (CCP_IOREG_gc) that enables change of protected I/O
+ 140:/usr/lib/avr/include/avr/wdt.h ****    registers to the CCP register
+ 141:/usr/lib/avr/include/avr/wdt.h **** ** At the same time,
+ 142:/usr/lib/avr/include/avr/wdt.h ****    1) set WDT change enable (WDT_CEN_bm)
+ 143:/usr/lib/avr/include/avr/wdt.h ****    2) enable WDT (WDT_ENABLE_bm)
+ 144:/usr/lib/avr/include/avr/wdt.h ****    3) set timeout (timeout)
+ 145:/usr/lib/avr/include/avr/wdt.h **** ** Synchronization starts when ENABLE bit of WDT is set. So, wait till it
+ 146:/usr/lib/avr/include/avr/wdt.h ****    finishes (SYNCBUSY of STATUS register is automatically cleared after the
+ 147:/usr/lib/avr/include/avr/wdt.h ****    sync is finished).
+ 148:/usr/lib/avr/include/avr/wdt.h **** */
+ 149:/usr/lib/avr/include/avr/wdt.h **** #define wdt_enable(timeout) \
+ 150:/usr/lib/avr/include/avr/wdt.h **** do { \
+ 151:/usr/lib/avr/include/avr/wdt.h **** uint8_t temp; \
+ 152:/usr/lib/avr/include/avr/wdt.h **** __asm__ __volatile__ (         \
+ 153:/usr/lib/avr/include/avr/wdt.h ****     "in __tmp_reg__, %[rampd]"              "\n\t" \
+ 154:/usr/lib/avr/include/avr/wdt.h ****     "out %[rampd], __zero_reg__"            "\n\t" \
+ 155:/usr/lib/avr/include/avr/wdt.h ****     "out %[ccp_reg], %[ioreg_cen_mask]"     "\n\t" \
+ 156:/usr/lib/avr/include/avr/wdt.h ****     "sts %[wdt_reg], %[wdt_enable_timeout]" "\n\t" \
+ 157:/usr/lib/avr/include/avr/wdt.h ****     "1:lds %[tmp], %[wdt_status_reg]"       "\n\t" \
+ 158:/usr/lib/avr/include/avr/wdt.h ****     "sbrc %[tmp], %[wdt_syncbusy_bit]"      "\n\t" \
+ 159:/usr/lib/avr/include/avr/wdt.h ****     "rjmp 1b"                               "\n\t" \
+ 160:/usr/lib/avr/include/avr/wdt.h ****     "out %[rampd], __tmp_reg__"             "\n\t" \
+ 161:/usr/lib/avr/include/avr/wdt.h ****     : [tmp]                "=r" (temp) \
+ 162:/usr/lib/avr/include/avr/wdt.h ****     : [rampd]              "I" (_SFR_IO_ADDR(RAMPD)),      \
+ 163:/usr/lib/avr/include/avr/wdt.h ****       [ccp_reg]            "I" (_SFR_IO_ADDR(CCP)),        \
+ 164:/usr/lib/avr/include/avr/wdt.h ****       [ioreg_cen_mask]     "r" ((uint8_t)CCP_IOREG_gc),     \
+ 165:/usr/lib/avr/include/avr/wdt.h ****       [wdt_reg]            "n" (_SFR_MEM_ADDR(WDT_CTRL)),   \
+ 166:/usr/lib/avr/include/avr/wdt.h ****       [wdt_enable_timeout] "r" ((uint8_t)(WDT_CEN_bm | WDT_ENABLE_bm | timeout)), \
+ 167:/usr/lib/avr/include/avr/wdt.h ****       [wdt_status_reg]     "n" (_SFR_MEM_ADDR(WDT_STATUS)), \
+ 168:/usr/lib/avr/include/avr/wdt.h ****       [wdt_syncbusy_bit]   "I" (WDT_SYNCBUSY_bm)            \
+ 169:/usr/lib/avr/include/avr/wdt.h ****     : "r0" \
+ 170:/usr/lib/avr/include/avr/wdt.h **** ); \
+ 171:/usr/lib/avr/include/avr/wdt.h **** } while(0)
+ 172:/usr/lib/avr/include/avr/wdt.h **** 
+ 173:/usr/lib/avr/include/avr/wdt.h **** #define wdt_disable() \
+ 174:/usr/lib/avr/include/avr/wdt.h **** __asm__ __volatile__ (  \
+ 175:/usr/lib/avr/include/avr/wdt.h ****     "in __tmp_reg__, %[rampd]"          "\n\t" \
+ 176:/usr/lib/avr/include/avr/wdt.h ****     "out %[rampd], __zero_reg__"        "\n\t" \
+ 177:/usr/lib/avr/include/avr/wdt.h ****     "out %[ccp_reg], %[ioreg_cen_mask]" "\n\t" \
+ 178:/usr/lib/avr/include/avr/wdt.h ****     "sts %[wdt_reg], %[disable_mask]"   "\n\t" \
+ 179:/usr/lib/avr/include/avr/wdt.h ****     "out %[rampd], __tmp_reg__"         "\n\t" \
+ 180:/usr/lib/avr/include/avr/wdt.h ****     : \
+ 181:/usr/lib/avr/include/avr/wdt.h ****     : [rampd]             "I" (_SFR_IO_ADDR(RAMPD)),    \
+ 182:/usr/lib/avr/include/avr/wdt.h ****       [ccp_reg]           "I" (_SFR_IO_ADDR(CCP)),      \
+ 183:/usr/lib/avr/include/avr/wdt.h ****       [ioreg_cen_mask]    "r" ((uint8_t)CCP_IOREG_gc),   \
+ 184:/usr/lib/avr/include/avr/wdt.h ****       [wdt_reg]           "n" (_SFR_MEM_ADDR(WDT_CTRL)), \
+ 185:/usr/lib/avr/include/avr/wdt.h ****       [disable_mask]      "r" ((uint8_t)((~WDT_ENABLE_bm) | WDT_CEN_bm)) \
+ 186:/usr/lib/avr/include/avr/wdt.h ****     : "r0" \
+ 187:/usr/lib/avr/include/avr/wdt.h **** );
+ 188:/usr/lib/avr/include/avr/wdt.h **** 
+ 189:/usr/lib/avr/include/avr/wdt.h **** #elif defined(__AVR_TINY__)
+ 190:/usr/lib/avr/include/avr/wdt.h **** 
+ 191:/usr/lib/avr/include/avr/wdt.h **** #define wdt_enable(value) \
+ 192:/usr/lib/avr/include/avr/wdt.h **** __asm__ __volatile__ ( \
+ 193:/usr/lib/avr/include/avr/wdt.h ****     "in __tmp_reg__,__SREG__" "\n\t"  \
+ 194:/usr/lib/avr/include/avr/wdt.h ****     "cli" "\n\t"  \
+ 195:/usr/lib/avr/include/avr/wdt.h ****     "wdr" "\n\t"  \
+ 196:/usr/lib/avr/include/avr/wdt.h ****     "out %[CCPADDRESS],%[SIGNATURE]" "\n\t"  \
+ 197:/usr/lib/avr/include/avr/wdt.h ****     "out %[WDTREG],%[WDVALUE]" "\n\t"  \
+ 198:/usr/lib/avr/include/avr/wdt.h ****     "out __SREG__,__tmp_reg__" "\n\t"  \
+ 199:/usr/lib/avr/include/avr/wdt.h ****     : /* no outputs */  \
+ 200:/usr/lib/avr/include/avr/wdt.h ****     : [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)),  \
+ 201:/usr/lib/avr/include/avr/wdt.h ****       [SIGNATURE] "r" ((uint8_t)0xD8), \
+ 202:/usr/lib/avr/include/avr/wdt.h ****       [WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)), \
+ 203:/usr/lib/avr/include/avr/wdt.h ****       [WDVALUE] "r" ((uint8_t)((value & 0x08 ? _WD_PS3_MASK : 0x00) \
+ 204:/usr/lib/avr/include/avr/wdt.h ****       | _BV(WDE) | (value & 0x07) )) \
+ 205:/usr/lib/avr/include/avr/wdt.h ****     : "r16" \
+ 206:/usr/lib/avr/include/avr/wdt.h **** )
+ 207:/usr/lib/avr/include/avr/wdt.h **** 
+ 208:/usr/lib/avr/include/avr/wdt.h **** #define wdt_disable() \
+ 209:/usr/lib/avr/include/avr/wdt.h **** do { \
+ 210:/usr/lib/avr/include/avr/wdt.h **** uint8_t temp_wd; \
+ 211:/usr/lib/avr/include/avr/wdt.h **** __asm__ __volatile__ ( \
+ 212:/usr/lib/avr/include/avr/wdt.h ****     "in __tmp_reg__,__SREG__" "\n\t"  \
+ 213:/usr/lib/avr/include/avr/wdt.h ****     "cli" "\n\t"  \
+ 214:/usr/lib/avr/include/avr/wdt.h ****     "wdr" "\n\t"  \
+ 215:/usr/lib/avr/include/avr/wdt.h ****     "out %[CCPADDRESS],%[SIGNATURE]" "\n\t"  \
+ 216:/usr/lib/avr/include/avr/wdt.h ****     "in  %[TEMP_WD],%[WDTREG]" "\n\t" \
+ 217:/usr/lib/avr/include/avr/wdt.h ****     "cbr %[TEMP_WD],%[WDVALUE]" "\n\t" \
+ 218:/usr/lib/avr/include/avr/wdt.h ****     "out %[WDTREG],%[TEMP_WD]" "\n\t" \
+ 219:/usr/lib/avr/include/avr/wdt.h ****     "out __SREG__,__tmp_reg__" "\n\t" \
+ 220:/usr/lib/avr/include/avr/wdt.h ****     : /*no output */ \
+ 221:/usr/lib/avr/include/avr/wdt.h ****     : [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)), \
+ 222:/usr/lib/avr/include/avr/wdt.h ****       [SIGNATURE] "r" ((uint8_t)0xD8), \
+ 223:/usr/lib/avr/include/avr/wdt.h ****       [WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)), \
+ 224:/usr/lib/avr/include/avr/wdt.h ****       [TEMP_WD] "d" (temp_wd), \
+ 225:/usr/lib/avr/include/avr/wdt.h ****       [WDVALUE] "n" (1 << WDE) \
+ 226:/usr/lib/avr/include/avr/wdt.h ****     : "r16" \
+ 227:/usr/lib/avr/include/avr/wdt.h **** ); \
+ 228:/usr/lib/avr/include/avr/wdt.h **** }while(0)
+ 229:/usr/lib/avr/include/avr/wdt.h **** 
+ 230:/usr/lib/avr/include/avr/wdt.h **** #elif defined(CCP)
+ 231:/usr/lib/avr/include/avr/wdt.h **** 
+ 232:/usr/lib/avr/include/avr/wdt.h **** static __inline__
+ 233:/usr/lib/avr/include/avr/wdt.h **** __attribute__ ((__always_inline__))
+ 234:/usr/lib/avr/include/avr/wdt.h **** void wdt_enable (const uint8_t value)
+ 235:/usr/lib/avr/include/avr/wdt.h **** {
+ 236:/usr/lib/avr/include/avr/wdt.h **** 	if (!_SFR_IO_REG_P (CCP) && !_SFR_IO_REG_P (_WD_CONTROL_REG))
+ 237:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 238:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 239:/usr/lib/avr/include/avr/wdt.h **** 			"in __tmp_reg__,__SREG__" "\n\t"
+ 240:/usr/lib/avr/include/avr/wdt.h **** 			"cli" "\n\t"
+ 241:/usr/lib/avr/include/avr/wdt.h **** 			"wdr" "\n\t"
+ 242:/usr/lib/avr/include/avr/wdt.h **** 			"sts %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 243:/usr/lib/avr/include/avr/wdt.h **** 			"sts %[WDTREG],%[WDVALUE]" "\n\t"
+ 244:/usr/lib/avr/include/avr/wdt.h **** 			"out __SREG__,__tmp_reg__" "\n\t"
+ 245:/usr/lib/avr/include/avr/wdt.h **** 			: /* no outputs */
+ 246:/usr/lib/avr/include/avr/wdt.h **** 			: [CCPADDRESS] "n" (_SFR_MEM_ADDR(CCP)),
+ 247:/usr/lib/avr/include/avr/wdt.h **** 			[SIGNATURE] "r" ((uint8_t)0xD8),
+ 248:/usr/lib/avr/include/avr/wdt.h **** 			[WDTREG] "n" (_SFR_MEM_ADDR(_WD_CONTROL_REG)),
+ 249:/usr/lib/avr/include/avr/wdt.h **** 			[WDVALUE] "r" ((uint8_t)((value & 0x08 ? _WD_PS3_MASK : 0x00)
+ 250:/usr/lib/avr/include/avr/wdt.h **** 				| _BV(WDE) | (value & 0x07) ))
+ 251:/usr/lib/avr/include/avr/wdt.h **** 			: "r0"
+ 252:/usr/lib/avr/include/avr/wdt.h **** 			);
+ 253:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 254:/usr/lib/avr/include/avr/wdt.h **** 	else if (!_SFR_IO_REG_P (CCP) && _SFR_IO_REG_P (_WD_CONTROL_REG))
+ 255:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 256:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 257:/usr/lib/avr/include/avr/wdt.h **** 			"in __tmp_reg__,__SREG__" "\n\t"
+ 258:/usr/lib/avr/include/avr/wdt.h **** 			"cli" "\n\t"
+ 259:/usr/lib/avr/include/avr/wdt.h **** 			"wdr" "\n\t"
+ 260:/usr/lib/avr/include/avr/wdt.h **** 			"sts %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 261:/usr/lib/avr/include/avr/wdt.h **** 			"out %[WDTREG],%[WDVALUE]" "\n\t"
+ 262:/usr/lib/avr/include/avr/wdt.h **** 			"out __SREG__,__tmp_reg__" "\n\t"
+ 263:/usr/lib/avr/include/avr/wdt.h **** 			: /* no outputs */
+ 264:/usr/lib/avr/include/avr/wdt.h **** 			: [CCPADDRESS] "n" (_SFR_MEM_ADDR(CCP)),
+ 265:/usr/lib/avr/include/avr/wdt.h **** 			[SIGNATURE] "r" ((uint8_t)0xD8),
+ 266:/usr/lib/avr/include/avr/wdt.h **** 			[WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 267:/usr/lib/avr/include/avr/wdt.h **** 			[WDVALUE] "r" ((uint8_t)((value & 0x08 ? _WD_PS3_MASK : 0x00)
+ 268:/usr/lib/avr/include/avr/wdt.h **** 				| _BV(WDE) | (value & 0x07) ))
+ 269:/usr/lib/avr/include/avr/wdt.h **** 			: "r0"
+ 270:/usr/lib/avr/include/avr/wdt.h **** 			);
+ 271:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 272:/usr/lib/avr/include/avr/wdt.h **** 	else if (_SFR_IO_REG_P (CCP) && !_SFR_IO_REG_P (_WD_CONTROL_REG))
+ 273:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 274:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 275:/usr/lib/avr/include/avr/wdt.h **** 			"in __tmp_reg__,__SREG__" "\n\t"
+ 276:/usr/lib/avr/include/avr/wdt.h **** 			"cli" "\n\t"
+ 277:/usr/lib/avr/include/avr/wdt.h **** 			"wdr" "\n\t"
+ 278:/usr/lib/avr/include/avr/wdt.h **** 			"out %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 279:/usr/lib/avr/include/avr/wdt.h **** 			"sts %[WDTREG],%[WDVALUE]" "\n\t"
+ 280:/usr/lib/avr/include/avr/wdt.h **** 			"out __SREG__,__tmp_reg__" "\n\t"
+ 281:/usr/lib/avr/include/avr/wdt.h **** 			: /* no outputs */
+ 282:/usr/lib/avr/include/avr/wdt.h **** 			: [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)),
+ 283:/usr/lib/avr/include/avr/wdt.h **** 			[SIGNATURE] "r" ((uint8_t)0xD8),
+ 284:/usr/lib/avr/include/avr/wdt.h **** 			[WDTREG] "n" (_SFR_MEM_ADDR(_WD_CONTROL_REG)),
+ 285:/usr/lib/avr/include/avr/wdt.h **** 			[WDVALUE] "r" ((uint8_t)((value & 0x08 ? _WD_PS3_MASK : 0x00)
+ 286:/usr/lib/avr/include/avr/wdt.h **** 				| _BV(WDE) | (value & 0x07) ))
+ 287:/usr/lib/avr/include/avr/wdt.h **** 			: "r0"
+ 288:/usr/lib/avr/include/avr/wdt.h **** 			);
+ 289:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 290:/usr/lib/avr/include/avr/wdt.h **** 	else
+ 291:/usr/lib/avr/include/avr/wdt.h ****  	{
+ 292:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 293:/usr/lib/avr/include/avr/wdt.h **** 			"in __tmp_reg__,__SREG__" "\n\t"
+ 294:/usr/lib/avr/include/avr/wdt.h **** 			"cli" "\n\t"
+ 295:/usr/lib/avr/include/avr/wdt.h **** 			"wdr" "\n\t"
+ 296:/usr/lib/avr/include/avr/wdt.h **** 			"out %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 297:/usr/lib/avr/include/avr/wdt.h **** 			"out %[WDTREG],%[WDVALUE]" "\n\t"
+ 298:/usr/lib/avr/include/avr/wdt.h **** 			"out __SREG__,__tmp_reg__" "\n\t"
+ 299:/usr/lib/avr/include/avr/wdt.h **** 			: /* no outputs */
+ 300:/usr/lib/avr/include/avr/wdt.h **** 			: [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)),
+ 301:/usr/lib/avr/include/avr/wdt.h **** 			[SIGNATURE] "r" ((uint8_t)0xD8),
+ 302:/usr/lib/avr/include/avr/wdt.h **** 			[WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 303:/usr/lib/avr/include/avr/wdt.h **** 			[WDVALUE] "r" ((uint8_t)((value & 0x08 ? _WD_PS3_MASK : 0x00)
+ 304:/usr/lib/avr/include/avr/wdt.h **** 				| _BV(WDE) | (value & 0x07) ))
+ 305:/usr/lib/avr/include/avr/wdt.h **** 			: "r0"
+ 306:/usr/lib/avr/include/avr/wdt.h **** 			);
+ 307:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 308:/usr/lib/avr/include/avr/wdt.h **** }
+ 309:/usr/lib/avr/include/avr/wdt.h **** 
+ 310:/usr/lib/avr/include/avr/wdt.h **** static __inline__
+ 311:/usr/lib/avr/include/avr/wdt.h **** __attribute__ ((__always_inline__))
+ 312:/usr/lib/avr/include/avr/wdt.h **** void wdt_disable (void)
+ 313:/usr/lib/avr/include/avr/wdt.h **** {
+ 314:/usr/lib/avr/include/avr/wdt.h **** 	if (!_SFR_IO_REG_P (CCP) && !_SFR_IO_REG_P(_WD_CONTROL_REG))
+ 315:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 316:/usr/lib/avr/include/avr/wdt.h ****         uint8_t temp_wd;
+ 317:/usr/lib/avr/include/avr/wdt.h ****         __asm__ __volatile__ (
+ 318:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 319:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 320:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 321:/usr/lib/avr/include/avr/wdt.h **** 				"sts %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 322:/usr/lib/avr/include/avr/wdt.h **** 				"lds %[TEMP_WD],%[WDTREG]" "\n\t"
+ 323:/usr/lib/avr/include/avr/wdt.h **** 				"cbr %[TEMP_WD],%[WDVALUE]" "\n\t"
+ 324:/usr/lib/avr/include/avr/wdt.h **** 				"sts %[WDTREG],%[TEMP_WD]" "\n\t"
+ 325:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 326:/usr/lib/avr/include/avr/wdt.h **** 				: /*no output */
+ 327:/usr/lib/avr/include/avr/wdt.h **** 				: [CCPADDRESS] "n" (_SFR_MEM_ADDR(CCP)),
+ 328:/usr/lib/avr/include/avr/wdt.h **** 				[SIGNATURE] "r" ((uint8_t)0xD8),
+ 329:/usr/lib/avr/include/avr/wdt.h **** 				[WDTREG] "n" (_SFR_MEM_ADDR(_WD_CONTROL_REG)),
+ 330:/usr/lib/avr/include/avr/wdt.h **** 				[TEMP_WD] "d" (temp_wd),
+ 331:/usr/lib/avr/include/avr/wdt.h **** 				[WDVALUE] "n" (1 << WDE)
+ 332:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 333:/usr/lib/avr/include/avr/wdt.h **** 				);
+ 334:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 335:/usr/lib/avr/include/avr/wdt.h **** 	else if (!_SFR_IO_REG_P (CCP) && _SFR_IO_REG_P(_WD_CONTROL_REG))
+ 336:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 337:/usr/lib/avr/include/avr/wdt.h ****         uint8_t temp_wd;
+ 338:/usr/lib/avr/include/avr/wdt.h ****         __asm__ __volatile__ (
+ 339:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 340:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 341:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 342:/usr/lib/avr/include/avr/wdt.h **** 				"sts %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 343:/usr/lib/avr/include/avr/wdt.h **** 				"in %[TEMP_WD],%[WDTREG]" "\n\t"
+ 344:/usr/lib/avr/include/avr/wdt.h **** 				"cbr %[TEMP_WD],%[WDVALUE]" "\n\t"
+ 345:/usr/lib/avr/include/avr/wdt.h **** 				"out %[WDTREG],%[TEMP_WD]" "\n\t"
+ 346:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 347:/usr/lib/avr/include/avr/wdt.h **** 				: /*no output */
+ 348:/usr/lib/avr/include/avr/wdt.h **** 				: [CCPADDRESS] "n" (_SFR_MEM_ADDR(CCP)),
+ 349:/usr/lib/avr/include/avr/wdt.h **** 				[SIGNATURE] "r" ((uint8_t)0xD8),
+ 350:/usr/lib/avr/include/avr/wdt.h **** 				[WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 351:/usr/lib/avr/include/avr/wdt.h **** 				[TEMP_WD] "d" (temp_wd),
+ 352:/usr/lib/avr/include/avr/wdt.h **** 				[WDVALUE] "n" (1 << WDE)
+ 353:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 354:/usr/lib/avr/include/avr/wdt.h **** 				);
+ 355:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 356:/usr/lib/avr/include/avr/wdt.h **** 	else if (_SFR_IO_REG_P (CCP) && !_SFR_IO_REG_P(_WD_CONTROL_REG))
+ 357:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 358:/usr/lib/avr/include/avr/wdt.h ****         uint8_t temp_wd;
+ 359:/usr/lib/avr/include/avr/wdt.h ****         __asm__ __volatile__ (
+ 360:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 361:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 362:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 363:/usr/lib/avr/include/avr/wdt.h **** 				"out %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 364:/usr/lib/avr/include/avr/wdt.h **** 				"lds %[TEMP_WD],%[WDTREG]" "\n\t"
+ 365:/usr/lib/avr/include/avr/wdt.h **** 				"cbr %[TEMP_WD],%[WDVALUE]" "\n\t"
+ 366:/usr/lib/avr/include/avr/wdt.h **** 				"sts %[WDTREG],%[TEMP_WD]" "\n\t"
+ 367:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 368:/usr/lib/avr/include/avr/wdt.h **** 				: /*no output */
+ 369:/usr/lib/avr/include/avr/wdt.h **** 				: [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)),
+ 370:/usr/lib/avr/include/avr/wdt.h **** 				[SIGNATURE] "r" ((uint8_t)0xD8),
+ 371:/usr/lib/avr/include/avr/wdt.h **** 				[WDTREG] "n" (_SFR_MEM_ADDR(_WD_CONTROL_REG)),
+ 372:/usr/lib/avr/include/avr/wdt.h **** 				[TEMP_WD] "d" (temp_wd),
+ 373:/usr/lib/avr/include/avr/wdt.h **** 				[WDVALUE] "n" (1 << WDE)
+ 374:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 375:/usr/lib/avr/include/avr/wdt.h **** 				);
+ 376:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 377:/usr/lib/avr/include/avr/wdt.h **** 	else
+ 378:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 379:/usr/lib/avr/include/avr/wdt.h ****         uint8_t temp_wd;
+ 380:/usr/lib/avr/include/avr/wdt.h ****         __asm__ __volatile__ (
+ 381:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 382:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 383:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 384:/usr/lib/avr/include/avr/wdt.h **** 				"out %[CCPADDRESS],%[SIGNATURE]" "\n\t"
+ 385:/usr/lib/avr/include/avr/wdt.h **** 				"in %[TEMP_WD],%[WDTREG]" "\n\t"
+ 386:/usr/lib/avr/include/avr/wdt.h **** 				"cbr %[TEMP_WD],%[WDVALUE]" "\n\t"
+ 387:/usr/lib/avr/include/avr/wdt.h **** 				"out %[WDTREG],%[TEMP_WD]" "\n\t"
+ 388:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 389:/usr/lib/avr/include/avr/wdt.h **** 				: /*no output */
+ 390:/usr/lib/avr/include/avr/wdt.h **** 				: [CCPADDRESS] "I" (_SFR_IO_ADDR(CCP)),
+ 391:/usr/lib/avr/include/avr/wdt.h **** 				[SIGNATURE] "r" ((uint8_t)0xD8),
+ 392:/usr/lib/avr/include/avr/wdt.h **** 				[WDTREG] "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 393:/usr/lib/avr/include/avr/wdt.h **** 				[TEMP_WD] "d" (temp_wd),
+ 394:/usr/lib/avr/include/avr/wdt.h **** 				[WDVALUE] "n" (1 << WDE)
+ 395:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 396:/usr/lib/avr/include/avr/wdt.h **** 				);
+ 397:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 398:/usr/lib/avr/include/avr/wdt.h **** }
+ 399:/usr/lib/avr/include/avr/wdt.h **** 
+ 400:/usr/lib/avr/include/avr/wdt.h **** #else
+ 401:/usr/lib/avr/include/avr/wdt.h **** 
+ 402:/usr/lib/avr/include/avr/wdt.h **** static __inline__
+ 403:/usr/lib/avr/include/avr/wdt.h **** __attribute__ ((__always_inline__))
+ 404:/usr/lib/avr/include/avr/wdt.h **** void wdt_enable (const uint8_t value)
+ 405:/usr/lib/avr/include/avr/wdt.h **** {
+ 406:/usr/lib/avr/include/avr/wdt.h **** 	if (_SFR_IO_REG_P (_WD_CONTROL_REG))
+ 407:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 408:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 409:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 410:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 411:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 412:/usr/lib/avr/include/avr/wdt.h **** 				"out %0, %1" "\n\t"
+ 413:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 414:/usr/lib/avr/include/avr/wdt.h **** 				"out %0, %2" "\n \t"
+ 415:/usr/lib/avr/include/avr/wdt.h **** 				: /* no outputs */
+ 416:/usr/lib/avr/include/avr/wdt.h **** 				: "I" (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 417:/usr/lib/avr/include/avr/wdt.h **** 				"r" ((uint8_t)(_BV(_WD_CHANGE_BIT) | _BV(WDE))),
+ 418:/usr/lib/avr/include/avr/wdt.h **** 				"r" ((uint8_t) ((value & 0x08 ? _WD_PS3_MASK : 0x00) |
+ 419:/usr/lib/avr/include/avr/wdt.h **** 						_BV(WDE) | (value & 0x07)) )
+ 420:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 421:/usr/lib/avr/include/avr/wdt.h **** 		);
+ 422:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 423:/usr/lib/avr/include/avr/wdt.h **** 	else
+ 424:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 425:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 426:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 427:/usr/lib/avr/include/avr/wdt.h **** 				"cli" "\n\t"
+ 428:/usr/lib/avr/include/avr/wdt.h **** 				"wdr" "\n\t"
+ 429:/usr/lib/avr/include/avr/wdt.h **** 				"sts %0, %1" "\n\t"
+ 430:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__" "\n\t"
+ 431:/usr/lib/avr/include/avr/wdt.h **** 				"sts %0, %2" "\n \t"
+ 432:/usr/lib/avr/include/avr/wdt.h **** 				: /* no outputs */
+ 433:/usr/lib/avr/include/avr/wdt.h **** 				: "n" (_SFR_MEM_ADDR(_WD_CONTROL_REG)),
+ 434:/usr/lib/avr/include/avr/wdt.h **** 				"r" ((uint8_t)(_BV(_WD_CHANGE_BIT) | _BV(WDE))),
+ 435:/usr/lib/avr/include/avr/wdt.h **** 				"r" ((uint8_t) ((value & 0x08 ? _WD_PS3_MASK : 0x00) |
+ 436:/usr/lib/avr/include/avr/wdt.h **** 						_BV(WDE) | (value & 0x07)) )
+ 437:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 438:/usr/lib/avr/include/avr/wdt.h **** 		);
+ 439:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 440:/usr/lib/avr/include/avr/wdt.h **** }
+ 441:/usr/lib/avr/include/avr/wdt.h **** 
+ 442:/usr/lib/avr/include/avr/wdt.h **** static __inline__
+ 443:/usr/lib/avr/include/avr/wdt.h **** __attribute__ ((__always_inline__))
+ 444:/usr/lib/avr/include/avr/wdt.h **** void wdt_disable (void)
+ 445:/usr/lib/avr/include/avr/wdt.h **** {
+ 446:/usr/lib/avr/include/avr/wdt.h **** 	if (_SFR_IO_REG_P (_WD_CONTROL_REG))
+ 447:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 448:/usr/lib/avr/include/avr/wdt.h ****         uint8_t register temp_reg;
+ 449:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 450:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__"    "\n\t"
+ 451:/usr/lib/avr/include/avr/wdt.h **** 				"cli"                        "\n\t"
+ 452:/usr/lib/avr/include/avr/wdt.h **** 				"wdr"                        "\n\t"
+ 453:/usr/lib/avr/include/avr/wdt.h **** 				"in  %[TEMPREG],%[WDTREG]"   "\n\t"
+ 454:/usr/lib/avr/include/avr/wdt.h **** 				"ori %[TEMPREG],%[WDCE_WDE]" "\n\t"
+ 455:/usr/lib/avr/include/avr/wdt.h **** 				"out %[WDTREG],%[TEMPREG]"   "\n\t"
+ 456:/usr/lib/avr/include/avr/wdt.h **** 				"out %[WDTREG],__zero_reg__" "\n\t"
+ 457:/usr/lib/avr/include/avr/wdt.h **** 				"out __SREG__,__tmp_reg__"   "\n\t"
+ 458:/usr/lib/avr/include/avr/wdt.h **** 				: [TEMPREG] "=d" (temp_reg)
+ 459:/usr/lib/avr/include/avr/wdt.h **** 				: [WDTREG]  "I"  (_SFR_IO_ADDR(_WD_CONTROL_REG)),
+ 460:/usr/lib/avr/include/avr/wdt.h **** 				[WDCE_WDE]  "n"  ((uint8_t)(_BV(_WD_CHANGE_BIT) | _BV(WDE)))
+ 461:/usr/lib/avr/include/avr/wdt.h **** 				: "r0"
+ 462:/usr/lib/avr/include/avr/wdt.h **** 		);
+ 463:/usr/lib/avr/include/avr/wdt.h **** 	}
+ 464:/usr/lib/avr/include/avr/wdt.h **** 	else
+ 465:/usr/lib/avr/include/avr/wdt.h **** 	{
+ 466:/usr/lib/avr/include/avr/wdt.h ****         uint8_t register temp_reg;
+ 467:/usr/lib/avr/include/avr/wdt.h **** 		__asm__ __volatile__ (
+ 267               	.LM25:
+ 268               	/* #APP */
+ 269               	 ;  467 "/usr/lib/avr/include/avr/wdt.h" 1
+ 270 0022 0FB6      		in __tmp_reg__,__SREG__
+ 271 0024 F894      		cli
+ 272 0026 A895      		wdr
+ 273 0028 8091 6000 		lds r24,96
+ 274 002c 8861      		ori r24,24
+ 275 002e 8093 6000 		sts 96,r24
+ 276 0032 1092 6000 		sts 96,__zero_reg__
+ 277 0036 0FBE      		out __SREG__,__tmp_reg__
+ 278               		
+ 279               	 ;  0 "" 2
+ 280               	/* #NOAPP */
+ 281               	.LBE33:
+ 282               	.LBE32:
+ 284               	.Ltext2:
  344:main.c        **** 		wdt_disable();
- 263               	.LM25:
- 264 0022 88E1      		ldi r24,lo8(24)
- 265               	/* #APP */
- 266               	 ;  344 "main.c" 1
- 267 0024 0FB6      		in __tmp_reg__, __SREG__
- 268 0026 F894      		cli
- 269 0028 8093 6000 		sts 96, r24
- 270 002c 1092 6000 		sts 96, __zero_reg__
- 271 0030 0FBE      		out __SREG__,__tmp_reg__
- 272               		
- 273               	 ;  0 "" 2
  345:main.c        **** 	#endif
  346:main.c        **** #endif
  347:main.c        **** 	
@@ -479,34 +955,33 @@
  350:main.c        **** #endif
  351:main.c        **** 
  352:main.c        **** 	BLDDR  &= ~(1<<BLPNUM);		// set as Input
- 275               	.LM26:
- 276               	/* #NOAPP */
- 277 0032 5298      		cbi 0xa,2
+ 286               	.LM26:
+ 287 0038 5298      		cbi 0xa,2
  353:main.c        **** 	BLPORT |= (1<<BLPNUM);		// Enable pullup
- 279               	.LM27:
- 280 0034 5A9A      		sbi 0xb,2
+ 289               	.LM27:
+ 290 003a 5A9A      		sbi 0xb,2
  354:main.c        **** 
  355:main.c        **** 	// Set baud rate
  356:main.c        **** 	UART_BAUD_HIGH = (UART_CALC_BAUDRATE(BAUDRATE)>>8) & 0xFF;
- 282               	.LM28:
- 283 0036 1092 C500 		sts 197,__zero_reg__
+ 292               	.LM28:
+ 293 003c 1092 C500 		sts 197,__zero_reg__
  357:main.c        **** 	UART_BAUD_LOW = (UART_CALC_BAUDRATE(BAUDRATE) & 0xFF);
- 285               	.LM29:
- 286 003a 85E0      		ldi r24,lo8(5)
- 287 003c 8093 C400 		sts 196,r24
+ 295               	.LM29:
+ 296 0040 85E0      		ldi r24,lo8(5)
+ 297 0042 8093 C400 		sts 196,r24
  358:main.c        **** 
  359:main.c        **** #ifdef UART_DOUBLESPEED
  360:main.c        **** 	UART_STATUS = ( 1<<UART_DOUBLE );
  361:main.c        **** #endif
  362:main.c        **** 
  363:main.c        **** 	UART_CTRL = UART_CTRL_DATA;
- 289               	.LM30:
- 290 0040 88E1      		ldi r24,lo8(24)
- 291 0042 8093 C100 		sts 193,r24
+ 299               	.LM30:
+ 300 0046 88E1      		ldi r24,lo8(24)
+ 301 0048 8093 C100 		sts 193,r24
  364:main.c        **** 	UART_CTRL2 = UART_CTRL2_DATA;
- 293               	.LM31:
- 294 0046 86E0      		ldi r24,lo8(6)
- 295 0048 8093 C200 		sts 194,r24
+ 303               	.LM31:
+ 304 004c 86E0      		ldi r24,lo8(6)
+ 305 004e 8093 C200 		sts 194,r24
  365:main.c        **** 	
  366:main.c        **** #if defined(START_POWERSAVE)
  367:main.c        **** 	/*
@@ -577,14 +1052,14 @@
  432:main.c        **** 
  433:main.c        **** #elif defined(START_WAIT)
  434:main.c        **** 
- 435:main.c        **** 	PWRPORT |=  (1<<PWRPNUM);
- 297               	.LM32:
- 298 004c 5F9A      		sbi 0xb,7
+ 435:main.c        **** 	PWRPORT |=  (1<<PWRPNUM); // TURN ON Bluetooth module
+ 307               	.LM32:
+ 308 0052 5F9A      		sbi 0xb,7
  436:main.c        **** 	PWRDDR  |=  (1<<PWRPNUM);
- 300               	.LM33:
- 301 004e 579A      		sbi 0xa,7
- 302 0050 E12C      		mov r14,__zero_reg__
- 303 0052 F12C      		mov r15,__zero_reg__
+ 310               	.LM33:
+ 311 0054 579A      		sbi 0xa,7
+ 312 0056 E12C      		mov r14,__zero_reg__
+ 313 0058 F12C      		mov r15,__zero_reg__
  437:main.c        **** 
  438:main.c        **** 	uint16_t cnt = 0;
  439:main.c        **** 
@@ -602,236 +1077,264 @@
  451:main.c        **** 			BIDDR  &= ~(1<<BIPNUM);
  452:main.c        **** 			#endif
  453:main.c        **** 			jump_to_app();			// Jump to application sector
- 305               	.LM34:
- 306 0054 00E0      		ldi r16,0
- 307 0056 10E0      		ldi r17,0
- 308               	.L14:
- 441:main.c        **** 		if (UART_STATUS & (1<<UART_RXREADY))
- 310               	.LM35:
- 311 0058 8091 C000 		lds r24,192
- 312 005c 87FF      		sbrs r24,7
- 313 005e 00C0      		rjmp .L11
- 442:main.c        **** 			if (UART_DATA == START_WAIT_UARTCHAR)
- 315               	.LM36:
- 316 0060 8091 C600 		lds r24,198
- 317 0064 8335      		cpi r24,lo8(83)
- 318 0066 01F0      		breq .L12
- 319               	.L11:
- 445:main.c        **** 		if (cnt++ >= WAIT_VALUE) {
- 321               	.LM37:
- 322 0068 80E2      		ldi r24,32
- 323 006a E816      		cp r14,r24
- 324 006c 83E0      		ldi r24,3
- 325 006e F806      		cpc r15,r24
- 326 0070 00F0      		brlo .L13
- 446:main.c        **** 			BLPORT &= ~(1<<BLPNUM);		// set to default
- 328               	.LM38:
- 329 0072 5A98      		cbi 0xb,2
- 450:main.c        **** 			BIPORT &= ~(1<<BIPNUM);	
- 331               	.LM39:
- 332 0074 5E98      		cbi 0xb,6
- 451:main.c        **** 			BIDDR  &= ~(1<<BIPNUM);
- 334               	.LM40:
- 335 0076 5698      		cbi 0xa,6
- 337               	.LM41:
- 338 0078 F801      		movw r30,r16
- 339 007a 0995      		icall
- 340               	.L13:
- 341               	.LBB23:
- 342               	.LBB24:
- 344               	.Ltext1:
-   1:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* Copyright (c) 2002, Marek Michalkiewicz
-   2:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Copyright (c) 2004,2005,2007 Joerg Wunsch
-   3:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Copyright (c) 2007  Florin-Viorel Petrov
-   4:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    All rights reserved.
-   5:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-   6:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Redistribution and use in source and binary forms, with or without
-   7:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    modification, are permitted provided that the following conditions are met:
-   8:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-   9:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Redistributions of source code must retain the above copyright
-  10:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer.
-  11:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  12:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Redistributions in binary form must reproduce the above copyright
-  13:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer in
-  14:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      the documentation and/or other materials provided with the
-  15:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      distribution.
-  16:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  17:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    * Neither the name of the copyright holders nor the names of
-  18:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      contributors may be used to endorse or promote products derived
-  19:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****      from this software without specific prior written permission.
-  20:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  21:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  22:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  23:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  24:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-  25:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  26:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  27:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  28:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  29:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  30:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  31:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   POSSIBILITY OF SUCH DAMAGE. */
-  32:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  33:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* $Id$ */
-  34:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  35:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef _UTIL_DELAY_H_
-  36:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #define _UTIL_DELAY_H_ 1
-  37:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  38:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef __HAS_DELAY_CYCLES
-  39:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #define __HAS_DELAY_CYCLES 1
-  40:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
-  41:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  42:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <inttypes.h>
-  43:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <util/delay_basic.h>
-  44:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #include <math.h>
-  45:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  46:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /** \file */
-  47:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /** \defgroup util_delay <util/delay.h>: Convenience functions for busy-wait delay loops
-  48:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \code
-  49:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     #define F_CPU 1000000UL  // 1 MHz
-  50:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     //#define F_CPU 14.7456E6
-  51:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     #include <util/delay.h>
-  52:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \endcode
-  53:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  54:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \note As an alternative method, it is possible to pass the
-  55:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     F_CPU macro down to the compiler from the Makefile.
-  56:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     Obviously, in that case, no \c \#define statement should be
-  57:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     used.
-  58:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  59:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     The functions in this header file are wrappers around the basic
-  60:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     busy-wait functions from <util/delay_basic.h>.  They are meant as
-  61:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     convenience functions where actual time values can be specified
-  62:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     rather than a number of cycles to wait for.  The idea behind is
-  63:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     that compile-time constant expressions will be eliminated by
-  64:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     compiler optimization so floating-point expressions can be used
-  65:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     to calculate the number of delay cycles needed based on the CPU
-  66:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     frequency passed by the macro F_CPU.
-  67:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  68:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     \note In order for these functions to work as intended, compiler
-  69:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     optimizations <em>must</em> be enabled, and the delay time
-  70:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     <em>must</em> be an expression that is a known constant at
-  71:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     compile-time.  If these requirements are not met, the resulting
-  72:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     delay will be much longer (and basically unpredictable), and
-  73:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     applications that otherwise do not use floating-point calculations
-  74:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     will experience severe code bloat by the floating-point library
-  75:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     routines linked into the application.
-  76:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  77:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     The functions available allow the specification of microsecond, and
-  78:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     millisecond delays directly, using the application-supplied macro
-  79:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     F_CPU as the CPU clock frequency (in Hertz).
-  80:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  81:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** */
-  82:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  83:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if !defined(__DOXYGEN__)
-  84:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** static inline void _delay_us(double __us) __attribute__((always_inline));
-  85:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** static inline void _delay_ms(double __ms) __attribute__((always_inline));
-  86:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
-  87:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  88:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef F_CPU
-  89:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /* prevent compiler error by supplying a default */
-  90:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # warning "F_CPU not defined for <util/delay.h>"
-  91:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # define F_CPU 1000000UL
-  92:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
-  93:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  94:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #ifndef __OPTIMIZE__
-  95:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** # warning "Compiler optimizations disabled; functions from <util/delay.h> won't work as designed"
-  96:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
-  97:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
-  98:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
-  99:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
- 100:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   __STDC_HOSTED__
- 101:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #  include <math.h>
- 102:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #endif
- 103:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 104:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** /**
- 105:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    \ingroup util_delay
- 106:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 107:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Perform a delay of \c __ms milliseconds, using _delay_loop_2().
- 108:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 109:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    The macro F_CPU is supposed to be defined to a
- 110:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    constant defining the CPU clock frequency (in Hertz).
- 111:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 112:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    The maximal possible delay is 262.14 ms / F_CPU in MHz.
- 113:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 114:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    When the user request delay which exceed the maximum possible one,
- 115:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    _delay_ms() provides a decreased resolution functionality. In this
- 116:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    mode _delay_ms() will work with a resolution of 1/10 ms, providing
- 117:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    delays up to 6.5535 seconds (independent from CPU frequency).  The
- 118:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    user will not be informed about decreased resolution.
- 119:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 120:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    If the avr-gcc toolchain has __builtin_avr_delay_cycles(unsigned long)
- 121:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    support, maximal possible delay is 4294967.295 ms/ F_CPU in MHz. For
- 122:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    values greater than the maximal possible delay, overflows results in
- 123:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    no delay i.e., 0ms.
- 124:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 125:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Conversion of __us into clock cycles may not always result in integer.
- 126:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    By default, the clock cycles rounded up to next integer. This ensures that
- 127:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    the user gets atleast __us microseconds of delay.
- 128:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 129:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Alternatively, user can define __DELAY_ROUND_DOWN__ and __DELAY_ROUND_CLOSEST__
- 130:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    to round down and round to closest integer.
- 131:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 132:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Note: The new implementation of _delay_ms(double __ms) with 
- 133:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****     __builtin_avr_delay_cycles(unsigned long) support is not backward compatible. 
- 134:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    User can define __DELAY_BACKWARD_COMPATIBLE__ to get a backward compatible delay.
- 135:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    Also, the backward compatible
- 136:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    algorithm will be chosen if the code is compiled in a <em>freestanding
- 137:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    environment</em> (GCC option \c -ffreestanding), as the math functions
- 138:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****    required for rounding are not available to the compiler then.
- 139:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 140:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****  */
- 141:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** void
- 142:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** _delay_ms(double __ms)
- 143:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** {
- 144:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	double __tmp ; 
- 145:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
- 146:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
- 147:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h ****   __STDC_HOSTED__
- 148:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	uint32_t __ticks_dc;
- 149:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	extern void __builtin_avr_delay_cycles(unsigned long);
- 150:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 1e3) * __ms;
- 151:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 152:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#if defined(__DELAY_ROUND_DOWN__)
- 153:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)fabs(__tmp);
- 154:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 155:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#elif defined(__DELAY_ROUND_CLOSEST__)
- 156:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(fabs(__tmp)+0.5);
- 157:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 158:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#else
- 159:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		//round up by default
- 160:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
- 161:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	#endif
- 162:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 
- 163:/usr/local/CrossPack-AVR-20131216/avr/include/util/delay.h **** 	__builtin_avr_delay_cycles(__ticks_dc);
- 346               	.LM42:
- 347 007c 8FEF      		ldi r24,lo8(9215)
- 348 007e 93E2      		ldi r25,hi8(9215)
- 349 0080 0197      		1: sbiw r24,1
- 350 0082 01F4      		brne 1b
- 351 0084 00C0      		rjmp .
- 352 0086 0000      		nop
- 353 0088 9FEF      		ldi r25,-1
- 354 008a E91A      		sub r14,r25
- 355 008c F90A      		sbc r15,r25
- 356 008e 00C0      		rjmp .L14
- 357               	.L12:
- 358               	.LBE24:
- 359               	.LBE23:
- 361               	.Ltext2:
+ 315               	.LM34:
+ 316 005a 00E0      		ldi r16,0
+ 317 005c 10E0      		ldi r17,0
+ 318               	.L15:
+ 441:main.c        **** 			if (UART_DATA == START_WAIT_UARTCHAR)
+ 320               	.LM35:
+ 321 005e 8091 C000 		lds r24,192
+ 322 0062 87FF      		sbrs r24,7
+ 323 0064 00C0      		rjmp .L12
+ 442:main.c        **** 				break;
+ 325               	.LM36:
+ 326 0066 8091 C600 		lds r24,198
+ 327 006a 8335      		cpi r24,lo8(83)
+ 328 006c 01F0      		breq .L13
+ 329               	.L12:
+ 445:main.c        **** 			BLPORT &= ~(1<<BLPNUM);		// set to default
+ 331               	.LM37:
+ 332 006e 80E2      		ldi r24,32
+ 333 0070 E816      		cp r14,r24
+ 334 0072 83E0      		ldi r24,3
+ 335 0074 F806      		cpc r15,r24
+ 336 0076 00F0      		brlo .L14
+ 446:main.c        **** 
+ 338               	.LM38:
+ 339 0078 5A98      		cbi 0xb,2
+ 450:main.c        **** 			BIDDR  &= ~(1<<BIPNUM);
+ 341               	.LM39:
+ 342 007a 2998      		cbi 0x5,1
+ 451:main.c        **** 			#endif
+ 344               	.LM40:
+ 345 007c 2198      		cbi 0x4,1
+ 347               	.LM41:
+ 348 007e F801      		movw r30,r16
+ 349 0080 0995      		icall
+ 350               	.L14:
+ 351               	.LBB34:
+ 352               	.LBB35:
+ 354               	.Ltext3:
+   1:/usr/lib/avr/include/util/delay.h **** /* Copyright (c) 2002, Marek Michalkiewicz
+   2:/usr/lib/avr/include/util/delay.h ****    Copyright (c) 2004,2005,2007 Joerg Wunsch
+   3:/usr/lib/avr/include/util/delay.h ****    Copyright (c) 2007  Florin-Viorel Petrov
+   4:/usr/lib/avr/include/util/delay.h ****    All rights reserved.
+   5:/usr/lib/avr/include/util/delay.h **** 
+   6:/usr/lib/avr/include/util/delay.h ****    Redistribution and use in source and binary forms, with or without
+   7:/usr/lib/avr/include/util/delay.h ****    modification, are permitted provided that the following conditions are met:
+   8:/usr/lib/avr/include/util/delay.h **** 
+   9:/usr/lib/avr/include/util/delay.h ****    * Redistributions of source code must retain the above copyright
+  10:/usr/lib/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer.
+  11:/usr/lib/avr/include/util/delay.h **** 
+  12:/usr/lib/avr/include/util/delay.h ****    * Redistributions in binary form must reproduce the above copyright
+  13:/usr/lib/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer in
+  14:/usr/lib/avr/include/util/delay.h ****      the documentation and/or other materials provided with the
+  15:/usr/lib/avr/include/util/delay.h ****      distribution.
+  16:/usr/lib/avr/include/util/delay.h **** 
+  17:/usr/lib/avr/include/util/delay.h ****    * Neither the name of the copyright holders nor the names of
+  18:/usr/lib/avr/include/util/delay.h ****      contributors may be used to endorse or promote products derived
+  19:/usr/lib/avr/include/util/delay.h ****      from this software without specific prior written permission.
+  20:/usr/lib/avr/include/util/delay.h **** 
+  21:/usr/lib/avr/include/util/delay.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:/usr/lib/avr/include/util/delay.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:/usr/lib/avr/include/util/delay.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:/usr/lib/avr/include/util/delay.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  25:/usr/lib/avr/include/util/delay.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:/usr/lib/avr/include/util/delay.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:/usr/lib/avr/include/util/delay.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:/usr/lib/avr/include/util/delay.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:/usr/lib/avr/include/util/delay.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:/usr/lib/avr/include/util/delay.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:/usr/lib/avr/include/util/delay.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  32:/usr/lib/avr/include/util/delay.h **** 
+  33:/usr/lib/avr/include/util/delay.h **** /* $Id$ */
+  34:/usr/lib/avr/include/util/delay.h **** 
+  35:/usr/lib/avr/include/util/delay.h **** #ifndef _UTIL_DELAY_H_
+  36:/usr/lib/avr/include/util/delay.h **** #define _UTIL_DELAY_H_ 1
+  37:/usr/lib/avr/include/util/delay.h **** 
+  38:/usr/lib/avr/include/util/delay.h **** #ifndef __HAS_DELAY_CYCLES
+  39:/usr/lib/avr/include/util/delay.h **** #define __HAS_DELAY_CYCLES 1
+  40:/usr/lib/avr/include/util/delay.h **** #endif
+  41:/usr/lib/avr/include/util/delay.h **** 
+  42:/usr/lib/avr/include/util/delay.h **** #include <inttypes.h>
+  43:/usr/lib/avr/include/util/delay.h **** #include <util/delay_basic.h>
+  44:/usr/lib/avr/include/util/delay.h **** #include <math.h>
+  45:/usr/lib/avr/include/util/delay.h **** 
+  46:/usr/lib/avr/include/util/delay.h **** /** \file */
+  47:/usr/lib/avr/include/util/delay.h **** /** \defgroup util_delay <util/delay.h>: Convenience functions for busy-wait delay loops
+  48:/usr/lib/avr/include/util/delay.h ****     \code
+  49:/usr/lib/avr/include/util/delay.h ****     #define F_CPU 1000000UL  // 1 MHz
+  50:/usr/lib/avr/include/util/delay.h ****     //#define F_CPU 14.7456E6
+  51:/usr/lib/avr/include/util/delay.h ****     #include <util/delay.h>
+  52:/usr/lib/avr/include/util/delay.h ****     \endcode
+  53:/usr/lib/avr/include/util/delay.h **** 
+  54:/usr/lib/avr/include/util/delay.h ****     \note As an alternative method, it is possible to pass the
+  55:/usr/lib/avr/include/util/delay.h ****     F_CPU macro down to the compiler from the Makefile.
+  56:/usr/lib/avr/include/util/delay.h ****     Obviously, in that case, no \c \#define statement should be
+  57:/usr/lib/avr/include/util/delay.h ****     used.
+  58:/usr/lib/avr/include/util/delay.h **** 
+  59:/usr/lib/avr/include/util/delay.h ****     The functions in this header file are wrappers around the basic
+  60:/usr/lib/avr/include/util/delay.h ****     busy-wait functions from <util/delay_basic.h>.  They are meant as
+  61:/usr/lib/avr/include/util/delay.h ****     convenience functions where actual time values can be specified
+  62:/usr/lib/avr/include/util/delay.h ****     rather than a number of cycles to wait for.  The idea behind is
+  63:/usr/lib/avr/include/util/delay.h ****     that compile-time constant expressions will be eliminated by
+  64:/usr/lib/avr/include/util/delay.h ****     compiler optimization so floating-point expressions can be used
+  65:/usr/lib/avr/include/util/delay.h ****     to calculate the number of delay cycles needed based on the CPU
+  66:/usr/lib/avr/include/util/delay.h ****     frequency passed by the macro F_CPU.
+  67:/usr/lib/avr/include/util/delay.h **** 
+  68:/usr/lib/avr/include/util/delay.h ****     \note In order for these functions to work as intended, compiler
+  69:/usr/lib/avr/include/util/delay.h ****     optimizations <em>must</em> be enabled, and the delay time
+  70:/usr/lib/avr/include/util/delay.h ****     <em>must</em> be an expression that is a known constant at
+  71:/usr/lib/avr/include/util/delay.h ****     compile-time.  If these requirements are not met, the resulting
+  72:/usr/lib/avr/include/util/delay.h ****     delay will be much longer (and basically unpredictable), and
+  73:/usr/lib/avr/include/util/delay.h ****     applications that otherwise do not use floating-point calculations
+  74:/usr/lib/avr/include/util/delay.h ****     will experience severe code bloat by the floating-point library
+  75:/usr/lib/avr/include/util/delay.h ****     routines linked into the application.
+  76:/usr/lib/avr/include/util/delay.h **** 
+  77:/usr/lib/avr/include/util/delay.h ****     The functions available allow the specification of microsecond, and
+  78:/usr/lib/avr/include/util/delay.h ****     millisecond delays directly, using the application-supplied macro
+  79:/usr/lib/avr/include/util/delay.h ****     F_CPU as the CPU clock frequency (in Hertz).
+  80:/usr/lib/avr/include/util/delay.h **** 
+  81:/usr/lib/avr/include/util/delay.h **** */
+  82:/usr/lib/avr/include/util/delay.h **** 
+  83:/usr/lib/avr/include/util/delay.h **** #if !defined(__DOXYGEN__)
+  84:/usr/lib/avr/include/util/delay.h **** static inline void _delay_us(double __us) __attribute__((always_inline));
+  85:/usr/lib/avr/include/util/delay.h **** static inline void _delay_ms(double __ms) __attribute__((always_inline));
+  86:/usr/lib/avr/include/util/delay.h **** #endif
+  87:/usr/lib/avr/include/util/delay.h **** 
+  88:/usr/lib/avr/include/util/delay.h **** #ifndef F_CPU
+  89:/usr/lib/avr/include/util/delay.h **** /* prevent compiler error by supplying a default */
+  90:/usr/lib/avr/include/util/delay.h **** # warning "F_CPU not defined for <util/delay.h>"
+  91:/usr/lib/avr/include/util/delay.h **** # define F_CPU 1000000UL
+  92:/usr/lib/avr/include/util/delay.h **** #endif
+  93:/usr/lib/avr/include/util/delay.h **** 
+  94:/usr/lib/avr/include/util/delay.h **** #ifndef __OPTIMIZE__
+  95:/usr/lib/avr/include/util/delay.h **** # warning "Compiler optimizations disabled; functions from <util/delay.h> won't work as designed"
+  96:/usr/lib/avr/include/util/delay.h **** #endif
+  97:/usr/lib/avr/include/util/delay.h **** 
+  98:/usr/lib/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+  99:/usr/lib/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 100:/usr/lib/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 101:/usr/lib/avr/include/util/delay.h **** #  include <math.h>
+ 102:/usr/lib/avr/include/util/delay.h **** #endif
+ 103:/usr/lib/avr/include/util/delay.h **** 
+ 104:/usr/lib/avr/include/util/delay.h **** /**
+ 105:/usr/lib/avr/include/util/delay.h ****    \ingroup util_delay
+ 106:/usr/lib/avr/include/util/delay.h **** 
+ 107:/usr/lib/avr/include/util/delay.h ****    Perform a delay of \c __ms milliseconds, using _delay_loop_2().
+ 108:/usr/lib/avr/include/util/delay.h **** 
+ 109:/usr/lib/avr/include/util/delay.h ****    The macro F_CPU is supposed to be defined to a
+ 110:/usr/lib/avr/include/util/delay.h ****    constant defining the CPU clock frequency (in Hertz).
+ 111:/usr/lib/avr/include/util/delay.h **** 
+ 112:/usr/lib/avr/include/util/delay.h ****    The maximal possible delay is 262.14 ms / F_CPU in MHz.
+ 113:/usr/lib/avr/include/util/delay.h **** 
+ 114:/usr/lib/avr/include/util/delay.h ****    When the user request delay which exceed the maximum possible one,
+ 115:/usr/lib/avr/include/util/delay.h ****    _delay_ms() provides a decreased resolution functionality. In this
+ 116:/usr/lib/avr/include/util/delay.h ****    mode _delay_ms() will work with a resolution of 1/10 ms, providing
+ 117:/usr/lib/avr/include/util/delay.h ****    delays up to 6.5535 seconds (independent from CPU frequency).  The
+ 118:/usr/lib/avr/include/util/delay.h ****    user will not be informed about decreased resolution.
+ 119:/usr/lib/avr/include/util/delay.h **** 
+ 120:/usr/lib/avr/include/util/delay.h ****    If the avr-gcc toolchain has __builtin_avr_delay_cycles(unsigned long)
+ 121:/usr/lib/avr/include/util/delay.h ****    support, maximal possible delay is 4294967.295 ms/ F_CPU in MHz. For
+ 122:/usr/lib/avr/include/util/delay.h ****    values greater than the maximal possible delay, overflows results in
+ 123:/usr/lib/avr/include/util/delay.h ****    no delay i.e., 0ms.
+ 124:/usr/lib/avr/include/util/delay.h **** 
+ 125:/usr/lib/avr/include/util/delay.h ****    Conversion of __us into clock cycles may not always result in integer.
+ 126:/usr/lib/avr/include/util/delay.h ****    By default, the clock cycles rounded up to next integer. This ensures that
+ 127:/usr/lib/avr/include/util/delay.h ****    the user gets atleast __us microseconds of delay.
+ 128:/usr/lib/avr/include/util/delay.h **** 
+ 129:/usr/lib/avr/include/util/delay.h ****    Alternatively, user can define __DELAY_ROUND_DOWN__ and __DELAY_ROUND_CLOSEST__
+ 130:/usr/lib/avr/include/util/delay.h ****    to round down and round to closest integer.
+ 131:/usr/lib/avr/include/util/delay.h **** 
+ 132:/usr/lib/avr/include/util/delay.h ****    Note: The new implementation of _delay_ms(double __ms) with 
+ 133:/usr/lib/avr/include/util/delay.h ****     __builtin_avr_delay_cycles(unsigned long) support is not backward compatible. 
+ 134:/usr/lib/avr/include/util/delay.h ****    User can define __DELAY_BACKWARD_COMPATIBLE__ to get a backward compatible delay.
+ 135:/usr/lib/avr/include/util/delay.h ****    Also, the backward compatible
+ 136:/usr/lib/avr/include/util/delay.h ****    algorithm will be chosen if the code is compiled in a <em>freestanding
+ 137:/usr/lib/avr/include/util/delay.h ****    environment</em> (GCC option \c -ffreestanding), as the math functions
+ 138:/usr/lib/avr/include/util/delay.h ****    required for rounding are not available to the compiler then.
+ 139:/usr/lib/avr/include/util/delay.h **** 
+ 140:/usr/lib/avr/include/util/delay.h ****  */
+ 141:/usr/lib/avr/include/util/delay.h **** void
+ 142:/usr/lib/avr/include/util/delay.h **** _delay_ms(double __ms)
+ 143:/usr/lib/avr/include/util/delay.h **** {
+ 144:/usr/lib/avr/include/util/delay.h **** 	double __tmp ; 
+ 145:/usr/lib/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+ 146:/usr/lib/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 147:/usr/lib/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 148:/usr/lib/avr/include/util/delay.h **** 	uint32_t __ticks_dc;
+ 149:/usr/lib/avr/include/util/delay.h **** 	extern void __builtin_avr_delay_cycles(unsigned long);
+ 150:/usr/lib/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 1e3) * __ms;
+ 151:/usr/lib/avr/include/util/delay.h **** 
+ 152:/usr/lib/avr/include/util/delay.h **** 	#if defined(__DELAY_ROUND_DOWN__)
+ 153:/usr/lib/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)fabs(__tmp);
+ 154:/usr/lib/avr/include/util/delay.h **** 
+ 155:/usr/lib/avr/include/util/delay.h **** 	#elif defined(__DELAY_ROUND_CLOSEST__)
+ 156:/usr/lib/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(fabs(__tmp)+0.5);
+ 157:/usr/lib/avr/include/util/delay.h **** 
+ 158:/usr/lib/avr/include/util/delay.h **** 	#else
+ 159:/usr/lib/avr/include/util/delay.h **** 		//round up by default
+ 160:/usr/lib/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+ 161:/usr/lib/avr/include/util/delay.h **** 	#endif
+ 162:/usr/lib/avr/include/util/delay.h **** 
+ 163:/usr/lib/avr/include/util/delay.h **** 	__builtin_avr_delay_cycles(__ticks_dc);
+ 356               	.LM42:
+ 357 0082 8FEF      		ldi r24,lo8(9215)
+ 358 0084 93E2      		ldi r25,hi8(9215)
+ 359 0086 0197      	1:	sbiw r24,1
+ 360 0088 01F4      		brne 1b
+ 361 008a 00C0      		rjmp .
+ 362 008c 0000      		nop
+ 363 008e 9FEF      		ldi r25,-1
+ 364 0090 E91A      		sub r14,r25
+ 365 0092 F90A      		sbc r15,r25
+ 366 0094 00C0      		rjmp .L15
+ 367               	.L13:
+ 368               	.LBE35:
+ 369               	.LBE34:
+ 371               	.Ltext4:
  454:main.c        **** 		}
  455:main.c        **** 
  456:main.c        **** 		_delay_ms(10);
  457:main.c        **** 	}
  458:main.c        **** 	send_boot();
- 363               	.LM43:
- 364 0090 0E94 0000 		call send_boot
- 324:main.c        **** 	uint8_t device = 0, val;
- 366               	.LM44:
- 367 0094 812C      		mov r8,__zero_reg__
- 323:main.c        **** 	uint16_t address = 0;
- 369               	.LM45:
- 370 0096 C12C      		mov r12,__zero_reg__
- 371 0098 D12C      		mov r13,__zero_reg__
+ 373               	.LM43:
+ 374 0096 0E94 0000 		call send_boot
+ 324:main.c        **** 
+ 376               	.LM44:
+ 377 009a 10E0      		ldi r17,0
+ 323:main.c        **** 	uint8_t device = 0, val;
+ 379               	.LM45:
+ 380 009c 612C      		mov r6,__zero_reg__
+ 381 009e 712C      		mov r7,__zero_reg__
+ 382               	.LBB36:
+ 383               	.LBB37:
+ 385               	.Ltext5:
+ 425:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 387               	.LM46:
+ 388 00a0 78E1      		ldi r23,lo8(24)
+ 389 00a2 972E      		mov r9,r23
+ 390 00a4 ECE0      		ldi r30,lo8(12)
+ 391 00a6 8E2E      		mov r8,r30
+ 392               	.LBE37:
+ 393               	.LBE36:
+ 394               	.LBB39:
+ 395               	.LBB40:
+ 397               	.Ltext6:
+ 173:main.c        **** 		boot_spm_busy_wait();		// Wait until the memory is erased.
+ 399               	.LM47:
+ 400 00a8 F3E0      		ldi r31,lo8(3)
+ 401 00aa 2F2E      		mov r2,r31
+ 177:main.c        **** }
+ 403               	.LM48:
+ 404 00ac 01E1      		ldi r16,lo8(17)
+ 405 00ae A0E0      		ldi r26,lo8(gBuffer)
+ 406 00b0 AA2E      		mov r10,r26
+ 407 00b2 A0E0      		ldi r26,hi8(gBuffer)
+ 408 00b4 BA2E      		mov r11,r26
+ 409               	.L16:
+ 410               	.LBE40:
+ 411               	.LBE39:
  459:main.c        **** 
  460:main.c        **** #elif defined(START_BOOTICE)
  461:main.c        **** #warning "BOOTICE mode - no startup-condition"
@@ -844,44 +1347,275 @@
  468:main.c        **** 	for(;;) 
  469:main.c        **** 	{
  470:main.c        **** 		val = recvchar();
+ 413               	.LM49:
+ 414 00b6 0E94 0000 		call recvchar
  471:main.c        **** 		// Autoincrement?
  472:main.c        **** 		if (val == 'a') 
+ 416               	.LM50:
+ 417 00ba 8136      		cpi r24,lo8(97)
+ 418 00bc 01F4      		brne .L17
  473:main.c        **** 		{
  474:main.c        **** 			sendchar('Y');			// Autoincrement is quicker
+ 420               	.LM51:
+ 421 00be 89E5      		ldi r24,lo8(89)
+ 422 00c0 00C0      		rjmp .L60
+ 423               	.L17:
  475:main.c        **** 
  476:main.c        **** 		//write address
  477:main.c        **** 		} 
  478:main.c        **** 		else if (val == 'A') 
+ 425               	.LM52:
+ 426 00c2 8134      		cpi r24,lo8(65)
+ 427 00c4 01F4      		brne .L19
  479:main.c        **** 		{
  480:main.c        **** 			address = recvchar();		//read address 8 MSB
+ 429               	.LM53:
+ 430 00c6 0E94 0000 		call recvchar
+ 431 00ca 682E      		mov r6,r24
+ 432 00cc 712C      		mov r7,__zero_reg__
  481:main.c        **** 			address = (address<<8) | recvchar();
+ 434               	.LM54:
+ 435 00ce 762C      		mov r7,r6
+ 436 00d0 6624      		clr r6
+ 437 00d2 0E94 0000 		call recvchar
+ 438 00d6 682A      		or r6,r24
+ 439 00d8 00C0      		rjmp .L61
+ 440               	.L19:
  482:main.c        **** 			sendchar('\r');
  483:main.c        **** 
  484:main.c        **** 		// Buffer load support
  485:main.c        **** 		} 
  486:main.c        **** 		else if (val == 'b') 
+ 442               	.LM55:
+ 443 00da 8236      		cpi r24,lo8(98)
+ 444 00dc 01F4      		brne .L20
  487:main.c        **** 		{
  488:main.c        **** 			sendchar('Y');					// Report buffer load supported
+ 446               	.LM56:
+ 447 00de 89E5      		ldi r24,lo8(89)
+ 448 00e0 0E94 0000 		call sendchar
  489:main.c        **** 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
+ 450               	.LM57:
+ 451 00e4 80E0      		ldi r24,0
+ 452 00e6 0E94 0000 		call sendchar
  490:main.c        **** 			sendchar(sizeof(gBuffer) & 0xFF);
+ 454               	.LM58:
+ 455 00ea 80E8      		ldi r24,lo8(-128)
+ 456 00ec 00C0      		rjmp .L60
+ 457               	.L20:
  491:main.c        **** 
  492:main.c        **** 		// Start buffer load
  493:main.c        **** 		} 
  494:main.c        **** 		else if (val == 'B') 
+ 459               	.LM59:
+ 460 00ee 8234      		cpi r24,lo8(66)
+ 461 00f0 01F0      		breq .+2
+ 462 00f2 00C0      		rjmp .L21
+ 463               	.LBB42:
  495:main.c        **** 		{
  496:main.c        **** 			pagebuf_t size;
  497:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 465               	.LM60:
+ 466 00f4 0E94 0000 		call recvchar
  498:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 468               	.LM61:
+ 469 00f8 0E94 0000 		call recvchar
+ 470 00fc 482E      		mov r4,r24
  499:main.c        **** 			val = recvchar();				// Load memory type ('E' or 'F')
+ 472               	.LM62:
+ 473 00fe 0E94 0000 		call recvchar
+ 474 0102 982F      		mov r25,r24
+ 475 0104 50E0      		ldi r21,lo8(gBuffer)
+ 476 0106 E52E      		mov r14,r21
+ 477 0108 50E0      		ldi r21,hi8(gBuffer)
+ 478 010a F52E      		mov r15,r21
+ 479               	.LBB43:
+ 480               	.LBB44:
+ 185:main.c        **** 		{
+ 482               	.LM63:
+ 483 010c D12C      		mov r13,__zero_reg__
+ 484               	.L23:
+ 187:main.c        **** 		}
+ 486               	.LM64:
+ 487 010e D414      		cp r13,r4
+ 488 0110 00F4      		brsh .L49
+ 489 0112 9983      		std Y+1,r25
+ 490 0114 0E94 0000 		call recvchar
+ 491 0118 9981      		ldd r25,Y+1
+ 492 011a 00C0      		rjmp .L22
+ 493               	.L49:
+ 494 011c 8FEF      		ldi r24,lo8(-1)
+ 495               	.L22:
+ 496 011e F701      		movw r30,r14
+ 497 0120 8193      		st Z+,r24
+ 498 0122 7F01      		movw r14,r30
+ 185:main.c        **** 		{
+ 500               	.LM65:
+ 501 0124 D394      		inc r13
+ 502 0126 F0E8      		ldi r31,lo8(-128)
+ 503 0128 DF12      		cpse r13,r31
+ 504 012a 00C0      		rjmp .L23
+ 505               	.LBE44:
+ 506               	.LBE43:
  500:main.c        **** 			recvBuffer(size);
  501:main.c        **** 
  502:main.c        **** 			if (device == DEVTYPE) 
+ 508               	.LM66:
+ 509 012c 1537      		cpi r17,lo8(117)
+ 510 012e 01F0      		breq .+2
+ 511 0130 00C0      		rjmp .L62
  503:main.c        **** 			{
  504:main.c        **** 				if (val == 'F') 
+ 513               	.LM67:
+ 514 0132 9634      		cpi r25,lo8(70)
+ 515 0134 01F0      		breq .+2
+ 516 0136 00C0      		rjmp .L25
+ 517               	.LBB45:
+ 518               	.LBB46:
+ 193:main.c        **** 	uint32_t baddr = pagestart;
+ 520               	.LM68:
+ 521 0138 6301      		movw r12,r6
+ 522 013a E12C      		mov r14,__zero_reg__
+ 523 013c F12C      		mov r15,__zero_reg__
+ 524 013e CC0C      		lsl r12
+ 525 0140 DD1C      		rol r13
+ 526 0142 EE1C      		rol r14
+ 527 0144 FF1C      		rol r15
+ 196:main.c        **** 
+ 529               	.LM69:
+ 530 0146 2091 0000 		lds r18,gBuffer
+ 194:main.c        **** 	uint16_t data;
+ 532               	.LM70:
+ 533 014a B701      		movw r22,r14
+ 534 014c A601      		movw r20,r12
+ 196:main.c        **** 
+ 536               	.LM71:
+ 537 014e A0E0      		ldi r26,lo8(gBuffer)
+ 538 0150 B0E0      		ldi r27,hi8(gBuffer)
+ 539               	.L27:
+ 540 0152 1296      		adiw r26,2
+ 541 0154 FD01      		movw r30,r26
+ 542 0156 3197      		sbiw r30,1
+ 201:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
+ 544               	.LM72:
+ 545 0158 8081      		ld r24,Z
+ 546 015a 30E0      		ldi r19,0
+ 547 015c 382B      		or r19,r24
+ 202:main.c        **** 
+ 549               	.LM73:
+ 550 015e 81E0      		ldi r24,lo8(1)
+ 551 0160 FA01      		movw r30,r20
+ 552               	/* #APP */
+ 553               	 ;  202 "main.c" 1
+ 554 0162 0901      		movw  r0, r18
+ 555 0164 8093 5700 		sts 87, r24
+ 556 0168 E895      		spm
+ 557 016a 1124      		clr  r1
+ 558               		
+ 559               	 ;  0 "" 2
+ 204:main.c        **** 		size -= 2;			// Reduce number of bytes to write by two
+ 561               	.LM74:
+ 562               	/* #NOAPP */
+ 563 016c 4E5F      		subi r20,-2
+ 564 016e 5F4F      		sbci r21,-1
+ 565 0170 6F4F      		sbci r22,-1
+ 566 0172 7F4F      		sbci r23,-1
+ 567 0174 8A2D      		mov r24,r10
+ 568 0176 8A1B      		sub r24,r26
+ 569 0178 840D      		add r24,r4
+ 207:main.c        **** 
+ 571               	.LM75:
+ 572 017a 01F0      		breq .L26
+ 201:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
+ 574               	.LM76:
+ 575 017c 2C91      		ld r18,X
+ 576 017e 00C0      		rjmp .L27
+ 577               	.L26:
+ 209:main.c        **** 	boot_spm_busy_wait();
+ 579               	.LM77:
+ 580 0180 85E0      		ldi r24,lo8(5)
+ 581 0182 F601      		movw r30,r12
+ 582               	/* #APP */
+ 583               	 ;  209 "main.c" 1
+ 584 0184 8093 5700 		sts 87, r24
+ 585 0188 E895      		spm
+ 586               		
+ 587               	 ;  0 "" 2
+ 588               	/* #NOAPP */
+ 589               	.L28:
+ 210:main.c        **** 	boot_rww_enable();		// Re-enable the RWW section
+ 591               	.LM78:
+ 592 018a 07B6      		in __tmp_reg__,0x37
+ 593 018c 00FC      		sbrc __tmp_reg__,0
+ 594 018e 00C0      		rjmp .L28
+ 211:main.c        **** 
+ 596               	.LM79:
+ 597               	/* #APP */
+ 598               	 ;  211 "main.c" 1
+ 599 0190 0093 5700 		sts 87, r16
+ 600 0194 E895      		spm
+ 601               		
+ 602               	 ;  0 "" 2
+ 213:main.c        **** }
+ 604               	.LM80:
+ 605               	/* #NOAPP */
+ 606 0196 DB01      		movw r26,r22
+ 607 0198 CA01      		movw r24,r20
+ 608 019a B695      		lsr r27
+ 609 019c A795      		ror r26
+ 610 019e 9795      		ror r25
+ 611 01a0 8795      		ror r24
+ 612 01a2 3C01      		movw r6,r24
+ 613               	.LBE46:
+ 614               	.LBE45:
+ 615 01a4 00C0      		rjmp .L61
+ 616               	.L25:
  505:main.c        **** 				{
  506:main.c        **** 				address = writeFlashPage(address, size);
  507:main.c        **** 				} 
  508:main.c        **** 				else if (val == 'E') 
+ 618               	.LM81:
+ 619 01a6 9534      		cpi r25,lo8(69)
+ 620 01a8 01F0      		breq .+2
+ 621 01aa 00C0      		rjmp .L61
+ 622 01ac 20E0      		ldi r18,lo8(gBuffer)
+ 623 01ae E22E      		mov r14,r18
+ 624 01b0 20E0      		ldi r18,hi8(gBuffer)
+ 625 01b2 F22E      		mov r15,r18
+ 626 01b4 6301      		movw r12,r6
+ 627 01b6 342C      		mov r3,r4
+ 628 01b8 3A0C      		add r3,r10
+ 629               	.L30:
+ 630               	.LBB47:
+ 631               	.LBB48:
+ 222:main.c        **** 		address++;			// Select next byte
+ 633               	.LM82:
+ 634 01ba F701      		movw r30,r14
+ 635 01bc 6191      		ld r22,Z+
+ 636 01be 7F01      		movw r14,r30
+ 637 01c0 C601      		movw r24,r12
+ 638 01c2 0E94 0000 		call eeprom_write_byte
+ 223:main.c        **** 		size--;				// Decreas number of bytes to write
+ 640               	.LM83:
+ 641 01c6 FFEF      		ldi r31,-1
+ 642 01c8 CF1A      		sub r12,r31
+ 643 01ca DF0A      		sbc r13,r31
+ 226:main.c        **** 
+ 645               	.LM84:
+ 646 01cc 3E10      		cpse r3,r14
+ 647 01ce 00C0      		rjmp .L30
+ 648 01d0 8FEF      		ldi r24,-1
+ 649 01d2 681A      		sub r6,r24
+ 650 01d4 780A      		sbc r7,r24
+ 651 01d6 8FEF      		ldi r24,lo8(-1)
+ 652 01d8 840D      		add r24,r4
+ 653 01da 680E      		add r6,r24
+ 654 01dc 711C      		adc r7,__zero_reg__
+ 655 01de 00C0      		rjmp .L61
+ 656               	.L21:
+ 657               	.LBE48:
+ 658               	.LBE47:
+ 659               	.LBE42:
  509:main.c        **** 				{
  510:main.c        **** 				address = writeEEpromPage(address, size);
  511:main.c        **** 				}
@@ -895,17 +1629,127 @@
  519:main.c        **** 		// Block read
  520:main.c        **** 		} 
  521:main.c        **** 		else if (val == 'g') 
+ 661               	.LM85:
+ 662 01e0 8736      		cpi r24,lo8(103)
+ 663 01e2 01F0      		breq .+2
+ 664 01e4 00C0      		rjmp .L31
+ 665               	.LBB49:
  522:main.c        **** 		{
  523:main.c        **** 			pagebuf_t size;
  524:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
+ 667               	.LM86:
+ 668 01e6 0E94 0000 		call recvchar
  525:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
+ 670               	.LM87:
+ 671 01ea 0E94 0000 		call recvchar
+ 672 01ee F82E      		mov r15,r24
  526:main.c        **** 			val = recvchar();				// Get memtype
+ 674               	.LM88:
+ 675 01f0 0E94 0000 		call recvchar
  527:main.c        **** 
  528:main.c        **** 			if (val == 'F') 
+ 677               	.LM89:
+ 678 01f4 8634      		cpi r24,lo8(70)
+ 679 01f6 01F4      		brne .L32
+ 680               	.LBB50:
+ 681               	.LBB51:
+ 235:main.c        **** 	uint16_t data;
+ 683               	.LM90:
+ 684 01f8 A301      		movw r20,r6
+ 685 01fa 60E0      		ldi r22,0
+ 686 01fc 70E0      		ldi r23,0
+ 687 01fe 2A01      		movw r4,r20
+ 688 0200 3B01      		movw r6,r22
+ 689 0202 440C      		lsl r4
+ 690 0204 551C      		rol r5
+ 691 0206 661C      		rol r6
+ 692 0208 771C      		rol r7
+ 693 020a DF2C      		mov r13,r15
+ 694 020c D40C      		add r13,r4
+ 695               	.L33:
+ 696               	.LBB52:
+ 246:main.c        **** 	#endif
+ 698               	.LM91:
+ 699 020e F201      		movw r30,r4
+ 700               	/* #APP */
+ 701               	 ;  246 "main.c" 1
+ 702 0210 E590      		lpm r14, Z+
+ 703 0212 F490      		lpm r15, Z
+ 704               		
+ 705               	 ;  0 "" 2
+ 706               	/* #NOAPP */
+ 707               	.LBE52:
+ 264:main.c        **** 		sendchar((data >> 8));		// send MSB
+ 709               	.LM92:
+ 710 0214 8E2D      		mov r24,r14
+ 711 0216 0E94 0000 		call sendchar
+ 265:main.c        **** 		baddr += 2;			// Select next word in memory
+ 713               	.LM93:
+ 714 021a 8F2D      		mov r24,r15
+ 715 021c 0E94 0000 		call sendchar
+ 266:main.c        **** 		size -= 2;			// Subtract two bytes from number of bytes to read
+ 717               	.LM94:
+ 718 0220 92E0      		ldi r25,2
+ 719 0222 490E      		add r4,r25
+ 720 0224 511C      		adc r5,__zero_reg__
+ 721 0226 611C      		adc r6,__zero_reg__
+ 722 0228 711C      		adc r7,__zero_reg__
+ 269:main.c        **** 	return baddr>>1;
+ 724               	.LM95:
+ 725 022a D410      		cpse r13,r4
+ 726 022c 00C0      		rjmp .L33
+ 270:main.c        **** }
+ 728               	.LM96:
+ 729 022e B301      		movw r22,r6
+ 730 0230 A201      		movw r20,r4
+ 731 0232 7695      		lsr r23
+ 732 0234 6795      		ror r22
+ 733 0236 5795      		ror r21
+ 734 0238 4795      		ror r20
+ 735 023a 3A01      		movw r6,r20
+ 736               	.LBE51:
+ 737               	.LBE50:
+ 738 023c 00C0      		rjmp .L16
+ 739               	.L32:
  529:main.c        **** 			{
  530:main.c        **** 			address = readFlashPage(address, size);
  531:main.c        **** 			} 
  532:main.c        **** 			else if (val == 'E') 
+ 741               	.LM97:
+ 742 023e 8534      		cpi r24,lo8(69)
+ 743 0240 01F0      		breq .+2
+ 744 0242 00C0      		rjmp .L16
+ 745 0244 6301      		movw r12,r6
+ 746 0246 E62C      		mov r14,r6
+ 747 0248 EF0C      		add r14,r15
+ 748               	.L34:
+ 749               	.LBB53:
+ 750               	.LBB54:
+ 277:main.c        **** 	address++;
+ 752               	.LM98:
+ 753 024a C601      		movw r24,r12
+ 754 024c 0E94 0000 		call eeprom_read_byte
+ 755 0250 0E94 0000 		call sendchar
+ 278:main.c        **** 	size--;				// Decrease number of bytes to read
+ 757               	.LM99:
+ 758 0254 EFEF      		ldi r30,-1
+ 759 0256 CE1A      		sub r12,r30
+ 760 0258 DE0A      		sbc r13,r30
+ 281:main.c        **** 
+ 762               	.LM100:
+ 763 025a EC10      		cpse r14,r12
+ 764 025c 00C0      		rjmp .L34
+ 765 025e FFEF      		ldi r31,-1
+ 766 0260 6F1A      		sub r6,r31
+ 767 0262 7F0A      		sbc r7,r31
+ 768 0264 FA94      		dec r15
+ 769 0266 6F0C      		add r6,r15
+ 770 0268 711C      		adc r7,__zero_reg__
+ 771 026a 00C0      		rjmp .L16
+ 772               	.L31:
+ 773               	.LBE54:
+ 774               	.LBE53:
+ 775               	.LBE49:
  533:main.c        **** 			{
  534:main.c        **** 			address = readEEpromPage(address, size);
  535:main.c        **** 			}
@@ -913,8 +1757,56 @@
  537:main.c        **** 		// Chip erase
  538:main.c        ****  		} 
  539:main.c        **** 		else if (val == 'e') 
+ 777               	.LM101:
+ 778 026c 8536      		cpi r24,lo8(101)
+ 779 026e 01F4      		brne .L35
  540:main.c        **** 		{
  541:main.c        **** 		if (device == DEVTYPE) 
+ 781               	.LM102:
+ 782 0270 1537      		cpi r17,lo8(117)
+ 783 0272 01F0      		breq .+2
+ 784 0274 00C0      		rjmp .L61
+ 785 0276 E0E0      		ldi r30,0
+ 786 0278 F0E0      		ldi r31,0
+ 787               	.L38:
+ 788               	.LBB55:
+ 789               	.LBB41:
+ 173:main.c        **** 		boot_spm_busy_wait();		// Wait until the memory is erased.
+ 791               	.LM103:
+ 792               	/* #APP */
+ 793               	 ;  173 "main.c" 1
+ 794 027a 2092 5700 		sts 87, r2
+ 795 027e E895      		spm
+ 796               		
+ 797               	 ;  0 "" 2
+ 798               	/* #NOAPP */
+ 799               	.L37:
+ 174:main.c        **** 		addr += SPM_PAGESIZE;
+ 801               	.LM104:
+ 802 0280 07B6      		in __tmp_reg__,0x37
+ 803 0282 00FC      		sbrc __tmp_reg__,0
+ 804 0284 00C0      		rjmp .L37
+ 805 0286 E058      		subi r30,-128
+ 806 0288 FF4F      		sbci r31,-1
+ 171:main.c        **** 		{
+ 808               	.LM105:
+ 809 028a E115      		cp r30,__zero_reg__
+ 810 028c 88E3      		ldi r24,56
+ 811 028e F807      		cpc r31,r24
+ 812 0290 01F4      		brne .L38
+ 177:main.c        **** }
+ 814               	.LM106:
+ 815               	/* #APP */
+ 816               	 ;  177 "main.c" 1
+ 817 0292 0093 5700 		sts 87, r16
+ 818 0296 E895      		spm
+ 819               		
+ 820               	 ;  0 "" 2
+ 821               	/* #NOAPP */
+ 822 0298 00C0      		rjmp .L61
+ 823               	.L35:
+ 824               	.LBE41:
+ 825               	.LBE55:
  542:main.c        **** 			{
  543:main.c        **** 			eraseFlash();
  544:main.c        **** 			}
@@ -923,457 +1815,32 @@
  547:main.c        **** 		// Exit upgrade
  548:main.c        **** 		} 
  549:main.c        **** 		else if (val == 'E') 
+ 827               	.LM107:
+ 828 029a 8534      		cpi r24,lo8(69)
+ 829 029c 01F4      		brne .L39
+ 830               	.LBB56:
+ 831               	.LBB38:
+ 833               	.Ltext7:
+ 425:/usr/lib/avr/include/avr/wdt.h **** 				"in __tmp_reg__,__SREG__" "\n\t"
+ 835               	.LM108:
+ 836               	/* #APP */
+ 837               	 ;  425 "/usr/lib/avr/include/avr/wdt.h" 1
+ 838 029e 0FB6      		in __tmp_reg__,__SREG__
+ 839 02a0 F894      		cli
+ 840 02a2 A895      		wdr
+ 841 02a4 9092 6000 		sts 96, r9
+ 842 02a8 0FBE      		out __SREG__,__tmp_reg__
+ 843 02aa 8092 6000 		sts 96, r8
+ 844               	 	
+ 845               	 ;  0 "" 2
+ 846               	/* #NOAPP */
+ 847 02ae 00C0      		rjmp .L61
+ 848               	.L39:
+ 849               	.LBE38:
+ 850               	.LBE56:
+ 852               	.Ltext8:
  550:main.c        **** 		{
  551:main.c        **** 		wdt_enable(EXIT_WDT_TIME); // Enable Watchdog Timer to give reset
- 373               	.LM46:
- 374 009a 6CE0      		ldi r22,lo8(12)
- 375 009c 362E      		mov r3,r22
- 376               	.LBB25:
- 377               	.LBB26:
- 173:main.c        **** 		boot_page_erase(addr);		// Perform page erase
- 379               	.LM47:
- 380 009e 73E0      		ldi r23,lo8(3)
- 381 00a0 672E      		mov r6,r23
- 177:main.c        **** 	boot_rww_enable();
- 383               	.LM48:
- 384 00a2 E1E1      		ldi r30,lo8(17)
- 385 00a4 7E2E      		mov r7,r30
- 386               	.LBE26:
- 387               	.LBE25:
- 388               	.LBB28:
- 389               	.LBB29:
- 390               	.LBB30:
- 202:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
- 392               	.LM49:
- 393 00a6 5524      		clr r5
- 394 00a8 5394      		inc r5
- 209:main.c        **** 	boot_page_write(pagestart);
- 396               	.LM50:
- 397 00aa F5E0      		ldi r31,lo8(5)
- 398 00ac 4F2E      		mov r4,r31
- 399               	.L15:
- 400               	.LBE30:
- 401               	.LBE29:
- 402               	.LBE28:
- 470:main.c        **** 		val = recvchar();
- 404               	.LM51:
- 405 00ae 0E94 0000 		call recvchar
- 472:main.c        **** 		if (val == 'a') 
- 407               	.LM52:
- 408 00b2 8136      		cpi r24,lo8(97)
- 409 00b4 01F4      		brne .L16
- 474:main.c        **** 			sendchar('Y');			// Autoincrement is quicker
- 411               	.LM53:
- 412 00b6 89E5      		ldi r24,lo8(89)
- 413 00b8 00C0      		rjmp .L59
- 414               	.L16:
- 478:main.c        **** 		else if (val == 'A') 
- 416               	.LM54:
- 417 00ba 8134      		cpi r24,lo8(65)
- 418 00bc 01F4      		brne .L18
- 480:main.c        **** 			address = recvchar();		//read address 8 MSB
- 420               	.LM55:
- 421 00be 0E94 0000 		call recvchar
- 422 00c2 90E0      		ldi r25,0
- 481:main.c        **** 			address = (address<<8) | recvchar();
- 424               	.LM56:
- 425 00c4 D82E      		mov r13,r24
- 426 00c6 CC24      		clr r12
- 427 00c8 0E94 0000 		call recvchar
- 428 00cc C82A      		or r12,r24
- 429 00ce 00C0      		rjmp .L60
- 430               	.L18:
- 486:main.c        **** 		else if (val == 'b') 
- 432               	.LM57:
- 433 00d0 8236      		cpi r24,lo8(98)
- 434 00d2 01F4      		brne .L19
- 488:main.c        **** 			sendchar('Y');					// Report buffer load supported
- 436               	.LM58:
- 437 00d4 89E5      		ldi r24,lo8(89)
- 438 00d6 0E94 0000 		call sendchar
- 489:main.c        **** 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
- 440               	.LM59:
- 441 00da 80E0      		ldi r24,0
- 442 00dc 0E94 0000 		call sendchar
- 490:main.c        **** 			sendchar(sizeof(gBuffer) & 0xFF);
- 444               	.LM60:
- 445 00e0 80E8      		ldi r24,lo8(-128)
- 446 00e2 00C0      		rjmp .L59
- 447               	.L19:
- 494:main.c        **** 		else if (val == 'B') 
- 449               	.LM61:
- 450 00e4 8234      		cpi r24,lo8(66)
- 451 00e6 01F0      		breq .+2
- 452 00e8 00C0      		rjmp .L20
- 453               	.LBB37:
- 497:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
- 455               	.LM62:
- 456 00ea 0E94 0000 		call recvchar
- 498:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
- 458               	.LM63:
- 459 00ee 0E94 0000 		call recvchar
- 460 00f2 982E      		mov r9,r24
- 499:main.c        **** 			val = recvchar();				// Load memory type ('E' or 'F')
- 462               	.LM64:
- 463 00f4 0E94 0000 		call recvchar
- 464 00f8 982F      		mov r25,r24
- 465 00fa 00E0      		ldi r16,lo8(gBuffer)
- 466 00fc 10E0      		ldi r17,hi8(gBuffer)
- 467               	.LBB32:
- 468               	.LBB33:
- 185:main.c        **** 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
- 470               	.LM65:
- 471 00fe B12C      		mov r11,__zero_reg__
- 472               	.L21:
- 187:main.c        **** 		*tmp++ = (cnt < size) ? recvchar() : 0xFF;
- 474               	.LM66:
- 475 0100 B914      		cp r11,r9
- 476 0102 00F4      		brsh .L55
- 477 0104 9983      		std Y+1,r25
- 478 0106 0E94 0000 		call recvchar
- 479 010a 9981      		ldd r25,Y+1
- 480 010c 00C0      		rjmp .L22
- 481               	.L55:
- 482 010e 8FEF      		ldi r24,lo8(-1)
- 483               	.L22:
- 484 0110 F801      		movw r30,r16
- 485 0112 8193      		st Z+,r24
- 486 0114 8F01      		movw r16,r30
- 185:main.c        **** 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
- 488               	.LM67:
- 489 0116 B394      		inc r11
- 490 0118 F0E8      		ldi r31,lo8(-128)
- 491 011a BF12      		cpse r11,r31
- 492 011c 00C0      		rjmp .L21
- 493               	.LBE33:
- 494               	.LBE32:
- 502:main.c        **** 			if (device == DEVTYPE) 
- 496               	.LM68:
- 497 011e 85E7      		ldi r24,lo8(117)
- 498 0120 8812      		cpse r8,r24
- 499 0122 00C0      		rjmp .L61
- 504:main.c        **** 				if (val == 'F') 
- 501               	.LM69:
- 502 0124 9634      		cpi r25,lo8(70)
- 503 0126 01F0      		breq .+2
- 504 0128 00C0      		rjmp .L25
- 505               	.LBB34:
- 506               	.LBB31:
- 193:main.c        **** 	uint32_t pagestart = (uint32_t)waddr<<1;
- 508               	.LM70:
- 509 012a 8601      		movw r16,r12
- 510 012c 20E0      		ldi r18,0
- 511 012e 30E0      		ldi r19,0
- 512 0130 000F      		lsl r16
- 513 0132 111F      		rol r17
- 514 0134 221F      		rol r18
- 515 0136 331F      		rol r19
- 196:main.c        **** 	uint8_t *tmp = gBuffer;
- 517               	.LM71:
- 518 0138 A0E0      		ldi r26,lo8(gBuffer)
- 519 013a B0E0      		ldi r27,hi8(gBuffer)
- 520 013c 8091 0000 		lds r24,gBuffer
- 194:main.c        **** 	uint32_t baddr = pagestart;
- 522               	.LM72:
- 523 0140 B901      		movw r22,r18
- 524 0142 A801      		movw r20,r16
- 525 0144 900E      		add r9,r16
- 526               	.L27:
- 201:main.c        **** 		data |= *tmp++ << 8;
- 528               	.LM73:
- 529 0146 1196      		adiw r26,1
- 530 0148 EC91      		ld r30,X
- 531 014a 1197      		sbiw r26,1
- 532 014c 90E0      		ldi r25,0
- 533 014e 9E2B      		or r25,r30
- 202:main.c        **** 		boot_page_fill(baddr, data);	// call asm routine.
- 535               	.LM74:
- 536 0150 FA01      		movw r30,r20
- 537               	/* #APP */
- 538               	 ;  202 "main.c" 1
- 539 0152 0C01      		movw  r0, r24
- 540 0154 5092 5700 		sts 87, r5
- 541 0158 E895      		spm
- 542 015a 1124      		clr  r1
- 543               		
- 544               	 ;  0 "" 2
- 204:main.c        **** 		baddr += 2;			// Select next word in memory
- 546               	.LM75:
- 547               	/* #NOAPP */
- 548 015c 4E5F      		subi r20,-2
- 549 015e 5F4F      		sbci r21,-1
- 550 0160 6F4F      		sbci r22,-1
- 551 0162 7F4F      		sbci r23,-1
- 207:main.c        **** 	while (size);				// Loop until all bytes written
- 553               	.LM76:
- 554 0164 9416      		cp r9,r20
- 555 0166 01F0      		breq .L26
- 201:main.c        **** 		data |= *tmp++ << 8;
- 557               	.LM77:
- 558 0168 1296      		adiw r26,2
- 559 016a 8C91      		ld r24,X
- 560 016c 1297      		sbiw r26,2
- 561 016e 1296      		adiw r26,2
- 562 0170 00C0      		rjmp .L27
- 563               	.L26:
- 209:main.c        **** 	boot_page_write(pagestart);
- 565               	.LM78:
- 566 0172 F801      		movw r30,r16
- 567               	/* #APP */
- 568               	 ;  209 "main.c" 1
- 569 0174 4092 5700 		sts 87, r4
- 570 0178 E895      		spm
- 571               		
- 572               	 ;  0 "" 2
- 573               	/* #NOAPP */
- 574               	.L29:
- 210:main.c        **** 	boot_spm_busy_wait();
- 576               	.LM79:
- 577 017a 07B6      		in __tmp_reg__,0x37
- 578 017c 00FC      		sbrc __tmp_reg__,0
- 579 017e 00C0      		rjmp .L29
- 211:main.c        **** 	boot_rww_enable();		// Re-enable the RWW section
- 581               	.LM80:
- 582               	/* #APP */
- 583               	 ;  211 "main.c" 1
- 584 0180 7092 5700 		sts 87, r7
- 585 0184 E895      		spm
- 586               		
- 587               	 ;  0 "" 2
- 213:main.c        **** 	return baddr>>1;
- 589               	.LM81:
- 590               	/* #NOAPP */
- 591 0186 7695      		lsr r23
- 592 0188 6795      		ror r22
- 593 018a 5795      		ror r21
- 594 018c 4795      		ror r20
- 595 018e 6A01      		movw r12,r20
- 596               	.LBE31:
- 597               	.LBE34:
- 598 0190 00C0      		rjmp .L60
- 599               	.L25:
- 508:main.c        **** 				else if (val == 'E') 
- 601               	.LM82:
- 602 0192 9534      		cpi r25,lo8(69)
- 603 0194 01F0      		breq .+2
- 604 0196 00C0      		rjmp .L60
- 605 0198 00E0      		ldi r16,lo8(gBuffer)
- 606 019a 10E0      		ldi r17,hi8(gBuffer)
- 607 019c C601      		movw r24,r12
- 608 019e 8050      		subi r24,lo8(gBuffer)
- 609 01a0 9040      		sbci r25,hi8(gBuffer)
- 610 01a2 5C01      		movw r10,r24
- 611 01a4 F801      		movw r30,r16
- 612 01a6 E90D      		add r30,r9
- 613 01a8 2E2E      		mov r2,r30
- 614               	.L32:
- 615 01aa C501      		movw r24,r10
- 616 01ac 800F      		add r24,r16
- 617 01ae 911F      		adc r25,r17
- 618               	.LBB35:
- 619               	.LBB36:
- 222:main.c        **** 		eeprom_write_byte( (uint8_t*)address, *tmp++ );
- 621               	.LM83:
- 622 01b0 F801      		movw r30,r16
- 623 01b2 6191      		ld r22,Z+
- 624 01b4 8F01      		movw r16,r30
- 625 01b6 0E94 0000 		call __eewr_byte_m168p
- 226:main.c        **** 	while (size);				// Loop until all bytes written
- 627               	.LM84:
- 628 01ba 2012      		cpse r2,r16
- 629 01bc 00C0      		rjmp .L32
- 630 01be FFEF      		ldi r31,-1
- 631 01c0 CF1A      		sub r12,r31
- 632 01c2 DF0A      		sbc r13,r31
- 633 01c4 9A94      		dec r9
- 634 01c6 C90C      		add r12,r9
- 635 01c8 D11C      		adc r13,__zero_reg__
- 636 01ca 00C0      		rjmp .L60
- 637               	.L20:
- 638               	.LBE36:
- 639               	.LBE35:
- 640               	.LBE37:
- 521:main.c        **** 		else if (val == 'g') 
- 642               	.LM85:
- 643 01cc 8736      		cpi r24,lo8(103)
- 644 01ce 01F0      		breq .+2
- 645 01d0 00C0      		rjmp .L33
- 646               	.LBB38:
- 524:main.c        **** 			size = recvchar() << 8;				// Load high byte of buffersize
- 648               	.LM86:
- 649 01d2 0E94 0000 		call recvchar
- 525:main.c        **** 			size |= recvchar();				// Load low byte of buffersize
- 651               	.LM87:
- 652 01d6 0E94 0000 		call recvchar
- 653 01da B82E      		mov r11,r24
- 526:main.c        **** 			val = recvchar();				// Get memtype
- 655               	.LM88:
- 656 01dc 0E94 0000 		call recvchar
- 528:main.c        **** 			if (val == 'F') 
- 658               	.LM89:
- 659 01e0 8634      		cpi r24,lo8(70)
- 660 01e2 01F4      		brne .L34
- 661               	.LBB39:
- 662               	.LBB40:
- 235:main.c        **** 	uint32_t baddr = (uint32_t)waddr<<1;
- 664               	.LM90:
- 665 01e4 E12C      		mov r14,__zero_reg__
- 666 01e6 F12C      		mov r15,__zero_reg__
- 667 01e8 CC0C      		lsl r12
- 668 01ea DD1C      		rol r13
- 669 01ec EE1C      		rol r14
- 670 01ee FF1C      		rol r15
- 671 01f0 BC0C      		add r11,r12
- 672               	.L36:
- 673               	.LBB41:
- 246:main.c        **** 		data = pgm_read_word_near(baddr);
- 675               	.LM91:
- 676 01f2 F601      		movw r30,r12
- 677               	/* #APP */
- 678               	 ;  246 "main.c" 1
- 679 01f4 0591      		lpm r16, Z+
- 680 01f6 1491      		lpm r17, Z
- 681               		
- 682               	 ;  0 "" 2
- 683               	/* #NOAPP */
- 684               	.LBE41:
- 264:main.c        **** 		sendchar(data);			// send LSB
- 686               	.LM92:
- 687 01f8 802F      		mov r24,r16
- 688 01fa 0E94 0000 		call sendchar
- 265:main.c        **** 		sendchar((data >> 8));		// send MSB
- 690               	.LM93:
- 691 01fe 812F      		mov r24,r17
- 692 0200 0E94 0000 		call sendchar
- 266:main.c        **** 		baddr += 2;			// Select next word in memory
- 694               	.LM94:
- 695 0204 82E0      		ldi r24,2
- 696 0206 C80E      		add r12,r24
- 697 0208 D11C      		adc r13,__zero_reg__
- 698 020a E11C      		adc r14,__zero_reg__
- 699 020c F11C      		adc r15,__zero_reg__
- 269:main.c        **** 	while (size);				// Repeat until block has been read
- 701               	.LM95:
- 702 020e BC10      		cpse r11,r12
- 703 0210 00C0      		rjmp .L36
- 270:main.c        **** 	return baddr>>1;
- 705               	.LM96:
- 706 0212 B701      		movw r22,r14
- 707 0214 A601      		movw r20,r12
- 708 0216 7695      		lsr r23
- 709 0218 6795      		ror r22
- 710 021a 5795      		ror r21
- 711 021c 4795      		ror r20
- 712 021e 6A01      		movw r12,r20
- 713               	.LBE40:
- 714               	.LBE39:
- 715 0220 00C0      		rjmp .L15
- 716               	.L34:
- 532:main.c        **** 			else if (val == 'E') 
- 718               	.LM97:
- 719 0222 8534      		cpi r24,lo8(69)
- 720 0224 01F0      		breq .+2
- 721 0226 00C0      		rjmp .L15
- 722 0228 8601      		movw r16,r12
- 723 022a AC2C      		mov r10,r12
- 724 022c AB0C      		add r10,r11
- 725               	.L38:
- 726               	.LBB42:
- 727               	.LBB43:
- 277:main.c        **** 	sendchar( eeprom_read_byte( (uint8_t*)address ) );
- 729               	.LM98:
- 730 022e C801      		movw r24,r16
- 731 0230 0E94 0000 		call __eerd_byte_m168p
- 732 0234 0E94 0000 		call sendchar
- 278:main.c        **** 	address++;
- 734               	.LM99:
- 735 0238 0F5F      		subi r16,-1
- 736 023a 1F4F      		sbci r17,-1
- 281:main.c        **** 	while (size);				// Repeat until block has been read
- 738               	.LM100:
- 739 023c A012      		cpse r10,r16
- 740 023e 00C0      		rjmp .L38
- 741 0240 9FEF      		ldi r25,-1
- 742 0242 C91A      		sub r12,r25
- 743 0244 D90A      		sbc r13,r25
- 744 0246 BA94      		dec r11
- 745 0248 CB0C      		add r12,r11
- 746 024a D11C      		adc r13,__zero_reg__
- 747 024c 00C0      		rjmp .L15
- 748               	.L33:
- 749               	.LBE43:
- 750               	.LBE42:
- 751               	.LBE38:
- 539:main.c        **** 		else if (val == 'e') 
- 753               	.LM101:
- 754 024e 8536      		cpi r24,lo8(101)
- 755 0250 01F4      		brne .L39
- 541:main.c        **** 		if (device == DEVTYPE) 
- 757               	.LM102:
- 758 0252 E5E7      		ldi r30,lo8(117)
- 759 0254 8E12      		cpse r8,r30
- 760 0256 00C0      		rjmp .L60
- 761 0258 E0E0      		ldi r30,0
- 762 025a F0E0      		ldi r31,0
- 763               	.L44:
- 764               	.LBB44:
- 765               	.LBB27:
- 173:main.c        **** 		boot_page_erase(addr);		// Perform page erase
- 767               	.LM103:
- 768               	/* #APP */
- 769               	 ;  173 "main.c" 1
- 770 025c 6092 5700 		sts 87, r6
- 771 0260 E895      		spm
- 772               		
- 773               	 ;  0 "" 2
- 774               	/* #NOAPP */
- 775               	.L42:
- 174:main.c        **** 		boot_spm_busy_wait();		// Wait until the memory is erased.
- 777               	.LM104:
- 778 0262 07B6      		in __tmp_reg__,0x37
- 779 0264 00FC      		sbrc __tmp_reg__,0
- 780 0266 00C0      		rjmp .L42
- 781 0268 E058      		subi r30,-128
- 782 026a FF4F      		sbci r31,-1
- 171:main.c        **** 	while (APP_END > addr) 
- 784               	.LM105:
- 785 026c E115      		cp r30,__zero_reg__
- 786 026e 88E3      		ldi r24,56
- 787 0270 F807      		cpc r31,r24
- 788 0272 01F4      		brne .L44
- 177:main.c        **** 	boot_rww_enable();
- 790               	.LM106:
- 791               	/* #APP */
- 792               	 ;  177 "main.c" 1
- 793 0274 7092 5700 		sts 87, r7
- 794 0278 E895      		spm
- 795               		
- 796               	 ;  0 "" 2
- 797               	/* #NOAPP */
- 798 027a 00C0      		rjmp .L60
- 799               	.L39:
- 800               	.LBE27:
- 801               	.LBE44:
- 549:main.c        **** 		else if (val == 'E') 
- 803               	.LM107:
- 804 027c 8534      		cpi r24,lo8(69)
- 805 027e 01F4      		brne .L45
- 807               	.LM108:
- 808 0280 E8E1      		ldi r30,lo8(24)
- 809 0282 F0E0      		ldi r31,0
- 810               	/* #APP */
- 811               	 ;  551 "main.c" 1
- 812 0284 0FB6      		in __tmp_reg__,__SREG__
- 813 0286 F894      		cli
- 814 0288 A895      		wdr
- 815 028a E093 6000 		sts 96,r30
- 816 028e 0FBE      		out __SREG__,__tmp_reg__
- 817 0290 3092 6000 		sts 96,r3
- 818               		
- 819               	 ;  0 "" 2
- 820               	/* #NOAPP */
- 821 0294 00C0      		rjmp .L60
- 822               	.L45:
  552:main.c        **** 		sendchar('\r');
  553:main.c        **** 
  554:main.c        **** 		#ifdef WRITELOCKBITS
@@ -1394,32 +1861,32 @@
  569:main.c        **** 		// Enter programming mode
  570:main.c        **** 		} 
  571:main.c        **** 		else if (val == 'P') 
- 824               	.LM109:
- 825 0296 8035      		cpi r24,lo8(80)
- 826 0298 01F0      		breq .L60
+ 854               	.LM109:
+ 855 02b0 8035      		cpi r24,lo8(80)
+ 856 02b2 01F0      		breq .L61
  572:main.c        **** 		{
  573:main.c        **** 		sendchar('\r');
  574:main.c        **** 
  575:main.c        **** 		// Leave programming mode
  576:main.c        **** 		} 
  577:main.c        **** 		else if (val == 'L') 
- 828               	.LM110:
- 829 029a 8C34      		cpi r24,lo8(76)
- 830 029c 01F0      		breq .L60
+ 858               	.LM110:
+ 859 02b4 8C34      		cpi r24,lo8(76)
+ 860 02b6 01F0      		breq .L61
  578:main.c        **** 		{
  579:main.c        **** 		sendchar('\r');
  580:main.c        **** 		// return programmer type
  581:main.c        **** 		} 
  582:main.c        **** 		else if (val == 'p') 
- 832               	.LM111:
- 833 029e 8037      		cpi r24,lo8(112)
- 834 02a0 01F4      		brne .L48
+ 862               	.LM111:
+ 863 02b8 8037      		cpi r24,lo8(112)
+ 864 02ba 01F4      		brne .L42
  583:main.c        **** 		{
  584:main.c        **** 		sendchar('S');		// always serial programmer
- 836               	.LM112:
- 837 02a2 83E5      		ldi r24,lo8(83)
- 838 02a4 00C0      		rjmp .L59
- 839               	.L48:
+ 866               	.LM112:
+ 867 02bc 83E5      		ldi r24,lo8(83)
+ 868 02be 00C0      		rjmp .L60
+ 869               	.L42:
  585:main.c        **** 
  586:main.c        **** 		#ifdef ENABLEREADFUSELOCK
  587:main.c        **** 			#warning "Extension 'ReadFuseLock' enabled"
@@ -1450,140 +1917,140 @@
  612:main.c        **** 		// Return device type
  613:main.c        **** 		} 
  614:main.c        **** 		else if (val == 't') 
- 841               	.LM113:
- 842 02a6 8437      		cpi r24,lo8(116)
- 843 02a8 01F4      		brne .L49
+ 871               	.LM113:
+ 872 02c0 8437      		cpi r24,lo8(116)
+ 873 02c2 01F4      		brne .L43
  615:main.c        **** 		{
  616:main.c        **** 		sendchar(DEVTYPE);
- 845               	.LM114:
- 846 02aa 85E7      		ldi r24,lo8(117)
- 847 02ac 0E94 0000 		call sendchar
- 848               	.L61:
+ 875               	.LM114:
+ 876 02c4 85E7      		ldi r24,lo8(117)
+ 877 02c6 0E94 0000 		call sendchar
+ 878               	.L62:
  617:main.c        **** 		sendchar(0);
- 850               	.LM115:
- 851 02b0 80E0      		ldi r24,0
- 852 02b2 00C0      		rjmp .L59
- 853               	.L49:
+ 880               	.LM115:
+ 881 02ca 80E0      		ldi r24,0
+ 882 02cc 00C0      		rjmp .L60
+ 883               	.L43:
  618:main.c        **** 		// clear and set LED ignored
  619:main.c        **** 		} 
  620:main.c        **** 		else if ((val == 'x') || (val == 'y')) 
- 855               	.LM116:
- 856 02b4 98E8      		ldi r25,lo8(-120)
- 857 02b6 980F      		add r25,r24
- 858 02b8 9230      		cpi r25,lo8(2)
- 859 02ba 00F4      		brsh .L50
+ 885               	.LM116:
+ 886 02ce 98E8      		ldi r25,lo8(-120)
+ 887 02d0 980F      		add r25,r24
+ 888 02d2 9230      		cpi r25,lo8(2)
+ 889 02d4 00F4      		brsh .L44
  621:main.c        **** 		{
  622:main.c        **** 		recvchar();
- 861               	.LM117:
- 862 02bc 0E94 0000 		call recvchar
- 863 02c0 00C0      		rjmp .L60
- 864               	.L50:
+ 891               	.LM117:
+ 892 02d6 0E94 0000 		call recvchar
+ 893 02da 00C0      		rjmp .L61
+ 894               	.L44:
  623:main.c        **** 		sendchar('\r');
  624:main.c        **** 
  625:main.c        **** 		// set device
  626:main.c        **** 		} 
  627:main.c        **** 		else if (val == 'T') 
- 866               	.LM118:
- 867 02c2 8435      		cpi r24,lo8(84)
- 868 02c4 01F4      		brne .L51
+ 896               	.LM118:
+ 897 02dc 8435      		cpi r24,lo8(84)
+ 898 02de 01F4      		brne .L45
  628:main.c        **** 		{
  629:main.c        **** 		device = recvchar();
- 870               	.LM119:
- 871 02c6 0E94 0000 		call recvchar
- 872 02ca 882E      		mov r8,r24
- 873               	.L60:
+ 900               	.LM119:
+ 901 02e0 0E94 0000 		call recvchar
+ 902 02e4 182F      		mov r17,r24
+ 903               	.L61:
  630:main.c        **** 		sendchar('\r');
- 875               	.LM120:
- 876 02cc 8DE0      		ldi r24,lo8(13)
- 877 02ce 00C0      		rjmp .L59
- 878               	.L51:
+ 905               	.LM120:
+ 906 02e6 8DE0      		ldi r24,lo8(13)
+ 907 02e8 00C0      		rjmp .L60
+ 908               	.L45:
  631:main.c        **** 		// Return software identifier
  632:main.c        **** 		} 
  633:main.c        **** 		else if (val == 'S') 
- 880               	.LM121:
- 881 02d0 8335      		cpi r24,lo8(83)
- 882 02d2 01F4      		brne .L52
+ 910               	.LM121:
+ 911 02ea 8335      		cpi r24,lo8(83)
+ 912 02ec 01F4      		brne .L46
  634:main.c        **** 		{
  635:main.c        **** 		send_boot();
- 884               	.LM122:
- 885 02d4 0E94 0000 		call send_boot
- 886 02d8 00C0      		rjmp .L15
- 887               	.L52:
+ 914               	.LM122:
+ 915 02ee 0E94 0000 		call send_boot
+ 916 02f2 00C0      		rjmp .L16
+ 917               	.L46:
  636:main.c        **** 
  637:main.c        **** 		// Return Software Version
  638:main.c        **** 		} 
  639:main.c        **** 		else if (val == 'V') {
- 889               	.LM123:
- 890 02da 8635      		cpi r24,lo8(86)
- 891 02dc 01F4      		brne .L53
+ 919               	.LM123:
+ 920 02f4 8635      		cpi r24,lo8(86)
+ 921 02f6 01F4      		brne .L47
  640:main.c        **** 		sendchar(VERSION_HIGH);
- 893               	.LM124:
- 894 02de 80E3      		ldi r24,lo8(48)
- 895 02e0 0E94 0000 		call sendchar
+ 923               	.LM124:
+ 924 02f8 80E3      		ldi r24,lo8(48)
+ 925 02fa 0E94 0000 		call sendchar
  641:main.c        **** 		sendchar(VERSION_LOW);
- 897               	.LM125:
- 898 02e4 88E3      		ldi r24,lo8(56)
- 899 02e6 00C0      		rjmp .L59
- 900               	.L53:
+ 927               	.LM125:
+ 928 02fe 88E3      		ldi r24,lo8(56)
+ 929 0300 00C0      		rjmp .L60
+ 930               	.L47:
  642:main.c        **** 
  643:main.c        **** 		// Return Signature Bytes (it seems that 
  644:main.c        **** 		// AVRProg expects the "Atmel-byte" 0x1E last
  645:main.c        **** 		// but shows it first in the dialog-window)
  646:main.c        **** 		} 
  647:main.c        **** 		else if (val == 's') 
- 902               	.LM126:
- 903 02e8 8337      		cpi r24,lo8(115)
- 904 02ea 01F4      		brne .L54
+ 932               	.LM126:
+ 933 0302 8337      		cpi r24,lo8(115)
+ 934 0304 01F4      		brne .L48
  648:main.c        **** 		{
  649:main.c        **** 		sendchar(SIG_BYTE3);
- 906               	.LM127:
- 907 02ec 8BE0      		ldi r24,lo8(11)
- 908 02ee 0E94 0000 		call sendchar
+ 936               	.LM127:
+ 937 0306 8BE0      		ldi r24,lo8(11)
+ 938 0308 0E94 0000 		call sendchar
  650:main.c        **** 		sendchar(SIG_BYTE2);
- 910               	.LM128:
- 911 02f2 84E9      		ldi r24,lo8(-108)
- 912 02f4 0E94 0000 		call sendchar
+ 940               	.LM128:
+ 941 030c 84E9      		ldi r24,lo8(-108)
+ 942 030e 0E94 0000 		call sendchar
  651:main.c        **** 		sendchar(SIG_BYTE1);
- 914               	.LM129:
- 915 02f8 8EE1      		ldi r24,lo8(30)
- 916 02fa 00C0      		rjmp .L59
- 917               	.L54:
+ 944               	.LM129:
+ 945 0312 8EE1      		ldi r24,lo8(30)
+ 946 0314 00C0      		rjmp .L60
+ 947               	.L48:
  652:main.c        **** 
  653:main.c        **** 		/* ESC */
  654:main.c        **** 		} 
  655:main.c        **** 		else if(val != 0x1b) 
- 919               	.LM130:
- 920 02fc 8B31      		cpi r24,lo8(27)
- 921 02fe 01F4      		brne .+2
- 922 0300 00C0      		rjmp .L15
+ 949               	.LM130:
+ 950 0316 8B31      		cpi r24,lo8(27)
+ 951 0318 01F4      		brne .+2
+ 952 031a 00C0      		rjmp .L16
  656:main.c        **** 		{
  657:main.c        **** 		sendchar('?');
- 924               	.LM131:
- 925 0302 8FE3      		ldi r24,lo8(63)
- 926               	.L59:
- 927 0304 0E94 0000 		call sendchar
- 928 0308 00C0      		rjmp .L15
- 942               	.Lscope5:
- 943               		.comm	gBuffer,128,1
- 945               		.text
- 947               	.Letext0:
- 948               		.ident	"GCC: (GNU) 4.8.1"
- 949               	.global __do_clear_bss
+ 954               	.LM131:
+ 955 031c 8FE3      		ldi r24,lo8(63)
+ 956               	.L60:
+ 957 031e 0E94 0000 		call sendchar
+ 958 0322 00C0      		rjmp .L16
+ 972               	.Lscope5:
+ 973               		.comm	gBuffer,128,1
+ 975               		.text
+ 977               	.Letext0:
+ 978               		.ident	"GCC: (GNU) 4.9.2"
+ 979               	.global __do_clear_bss
 DEFINED SYMBOLS
-                            *ABS*:00000000 main.c
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:2      *ABS*:0000003e __SP_H__
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:3      *ABS*:0000003d __SP_L__
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:4      *ABS*:0000003f __SREG__
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:5      *ABS*:00000000 __tmp_reg__
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:6      *ABS*:00000001 __zero_reg__
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:116    .text:00000000 sendchar
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:138    .text:0000000e recvchar
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:162    .text:0000001c send_boot
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:203    .text:00000046 __vector_default
-/var/folders/p_/22ys241566x6c1vwds_vxbgh0000gn/T//ccTA8ydZ.s:218    .text.startup:00000000 main
-                            *COM*:00000080 gBuffer
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccdZPUIa.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccdZPUIa.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccdZPUIa.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccdZPUIa.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccdZPUIa.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccdZPUIa.s:116    .text:0000000000000000 sendchar
+     /tmp/ccdZPUIa.s:138    .text:000000000000000e recvchar
+     /tmp/ccdZPUIa.s:162    .text:000000000000001c send_boot
+     /tmp/ccdZPUIa.s:203    .text:0000000000000046 __vector_default
+     /tmp/ccdZPUIa.s:218    .text.startup:0000000000000000 main
+                            *COM*:0000000000000080 gBuffer
 
 UNDEFINED SYMBOLS
-__eewr_byte_m168p
-__eerd_byte_m168p
+eeprom_write_byte
+eeprom_read_byte
 __do_clear_bss

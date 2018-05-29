@@ -3,26 +3,22 @@ main.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000003aa  00003800  00003800  00000074  2**0
+  0 .data         00000000  00800100  00003bc4  00000438  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         000003c4  00003800  00003800  00000074  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .trampolines  00000000  00003baa  00003baa  0000041e  2**1
+  2 .trampolines  00000000  00003bc4  00003bc4  00000438  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          00000080  00800100  00003baa  0000041e  2**0
+  3 .bss          00000080  00800100  00003bc4  00000438  2**0
                   ALLOC
-  3 .stab         00000c24  00000000  00000000  00000420  2**2
+  4 .stab         00000c6c  00000000  00000000  00000438  2**2
                   CONTENTS, READONLY, DEBUGGING
-  4 .stabstr      00000dc4  00000000  00000000  00001044  2**0
+  5 .stabstr      00000d05  00000000  00000000  000010a4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .comment      00000011  00000000  00000000  00001e08  2**0
+  6 .comment      00000011  00000000  00000000  00001da9  2**0
                   CONTENTS, READONLY
-  6 .debug_aranges 00000040  00000000  00000000  00001e20  2**3
-                  CONTENTS, READONLY, DEBUGGING
-  7 .debug_info   0000017c  00000000  00000000  00001e60  2**0
-                  CONTENTS, READONLY, DEBUGGING
-  8 .debug_abbrev 00000028  00000000  00000000  00001fdc  2**0
-                  CONTENTS, READONLY, DEBUGGING
-  9 .debug_line   000000b6  00000000  00000000  00002004  2**0
-                  CONTENTS, READONLY, DEBUGGING
+  7 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00001dbc  2**2
+                  CONTENTS, READONLY
 
 Disassembly of section .text:
 
@@ -48,7 +44,7 @@ Disassembly of section .text:
     3818:	b2 07       	cpc	r27, r18
     381a:	e1 f7       	brne	.-8      	; 0x3814 <.do_clear_bss_loop>
     381c:	0e 94 38 1c 	call	0x3870	; 0x3870 <main>
-    3820:	0c 94 d3 1d 	jmp	0x3ba6	; 0x3ba6 <_exit>
+    3820:	0c 94 e0 1d 	jmp	0x3bc0	; 0x3bc0 <_exit>
 
 00003824 <__bad_interrupt>:
     3824:	0c 94 37 1c 	jmp	0x386e	; 0x386e <__vector_default>
@@ -136,9 +132,9 @@ int main(void)
 
 #ifdef ENABLE_BOOT_LED	// LED ON
 	BIPORT |= (1<<BIPNUM);	
-    387a:	5e 9a       	sbi	0x0b, 6	; 11
+    387a:	29 9a       	sbi	0x05, 1	; 5
 	BIDDR  |= (1<<BIPNUM);
-    387c:	56 9a       	sbi	0x0a, 6	; 10
+    387c:	21 9a       	sbi	0x04, 1	; 4
 #ifdef DISABLE_WDT_AT_STARTUP
 	#ifdef WDT_OFF_SPECIAL
 		#warning "using target specific watchdog_off"
@@ -156,740 +152,744 @@ int main(void)
     388a:	80 93 60 00 	sts	0x0060, r24
 	    WDTCSR=0;
     388e:	10 92 60 00 	sts	0x0060, r1
-		wdt_disable();
-    3892:	88 e1       	ldi	r24, 0x18	; 24
-    3894:	0f b6       	in	r0, 0x3f	; 63
-    3896:	f8 94       	cli
-    3898:	80 93 60 00 	sts	0x0060, r24
-    389c:	10 92 60 00 	sts	0x0060, r1
-    38a0:	0f be       	out	0x3f, r0	; 63
+		);
+	}
+	else
+	{
+        uint8_t register temp_reg;
+		__asm__ __volatile__ (
+    3892:	0f b6       	in	r0, 0x3f	; 63
+    3894:	f8 94       	cli
+    3896:	a8 95       	wdr
+    3898:	80 91 60 00 	lds	r24, 0x0060
+    389c:	88 61       	ori	r24, 0x18	; 24
+    389e:	80 93 60 00 	sts	0x0060, r24
+    38a2:	10 92 60 00 	sts	0x0060, r1
+    38a6:	0f be       	out	0x3f, r0	; 63
 	
 #ifdef START_POWERSAVE
 	uint8_t OK = 1;
 #endif
 
 	BLDDR  &= ~(1<<BLPNUM);		// set as Input
-    38a2:	52 98       	cbi	0x0a, 2	; 10
+    38a8:	52 98       	cbi	0x0a, 2	; 10
 	BLPORT |= (1<<BLPNUM);		// Enable pullup
-    38a4:	5a 9a       	sbi	0x0b, 2	; 11
+    38aa:	5a 9a       	sbi	0x0b, 2	; 11
 
 	// Set baud rate
 	UART_BAUD_HIGH = (UART_CALC_BAUDRATE(BAUDRATE)>>8) & 0xFF;
-    38a6:	10 92 c5 00 	sts	0x00C5, r1
+    38ac:	10 92 c5 00 	sts	0x00C5, r1
 	UART_BAUD_LOW = (UART_CALC_BAUDRATE(BAUDRATE) & 0xFF);
-    38aa:	85 e0       	ldi	r24, 0x05	; 5
-    38ac:	80 93 c4 00 	sts	0x00C4, r24
+    38b0:	85 e0       	ldi	r24, 0x05	; 5
+    38b2:	80 93 c4 00 	sts	0x00C4, r24
 
 #ifdef UART_DOUBLESPEED
 	UART_STATUS = ( 1<<UART_DOUBLE );
 #endif
 
 	UART_CTRL = UART_CTRL_DATA;
-    38b0:	88 e1       	ldi	r24, 0x18	; 24
-    38b2:	80 93 c1 00 	sts	0x00C1, r24
+    38b6:	88 e1       	ldi	r24, 0x18	; 24
+    38b8:	80 93 c1 00 	sts	0x00C1, r24
 	UART_CTRL2 = UART_CTRL2_DATA;
-    38b6:	86 e0       	ldi	r24, 0x06	; 6
-    38b8:	80 93 c2 00 	sts	0x00C2, r24
+    38bc:	86 e0       	ldi	r24, 0x06	; 6
+    38be:	80 93 c2 00 	sts	0x00C2, r24
 		jump_to_app();			// Jump to application sector
 	}
 
 #elif defined(START_WAIT)
 
-	PWRPORT |=  (1<<PWRPNUM);
-    38bc:	5f 9a       	sbi	0x0b, 7	; 11
+	PWRPORT |=  (1<<PWRPNUM); // TURN ON Bluetooth module
+    38c2:	5f 9a       	sbi	0x0b, 7	; 11
 	PWRDDR  |=  (1<<PWRPNUM);
-    38be:	57 9a       	sbi	0x0a, 7	; 10
-    38c0:	e1 2c       	mov	r14, r1
-    38c2:	f1 2c       	mov	r15, r1
+    38c4:	57 9a       	sbi	0x0a, 7	; 10
+    38c6:	e1 2c       	mov	r14, r1
+    38c8:	f1 2c       	mov	r15, r1
 
 			#ifdef ENABLE_BOOT_LED	// LED OFF
 			BIPORT &= ~(1<<BIPNUM);	
 			BIDDR  &= ~(1<<BIPNUM);
 			#endif
 			jump_to_app();			// Jump to application sector
-    38c4:	00 e0       	ldi	r16, 0x00	; 0
-    38c6:	10 e0       	ldi	r17, 0x00	; 0
+    38ca:	00 e0       	ldi	r16, 0x00	; 0
+    38cc:	10 e0       	ldi	r17, 0x00	; 0
 	PWRDDR  |=  (1<<PWRPNUM);
 
 	uint16_t cnt = 0;
 
 	while (1) {
 		if (UART_STATUS & (1<<UART_RXREADY))
-    38c8:	80 91 c0 00 	lds	r24, 0x00C0
-    38cc:	87 ff       	sbrs	r24, 7
-    38ce:	04 c0       	rjmp	.+8      	; 0x38d8 <main+0x68>
+    38ce:	80 91 c0 00 	lds	r24, 0x00C0
+    38d2:	87 ff       	sbrs	r24, 7
+    38d4:	04 c0       	rjmp	.+8      	; 0x38de <main+0x6e>
 			if (UART_DATA == START_WAIT_UARTCHAR)
-    38d0:	80 91 c6 00 	lds	r24, 0x00C6
-    38d4:	83 35       	cpi	r24, 0x53	; 83
-    38d6:	a1 f0       	breq	.+40     	; 0x3900 <main+0x90>
+    38d6:	80 91 c6 00 	lds	r24, 0x00C6
+    38da:	83 35       	cpi	r24, 0x53	; 83
+    38dc:	a1 f0       	breq	.+40     	; 0x3906 <main+0x96>
 				break;
 
 		if (cnt++ >= WAIT_VALUE) {
-    38d8:	80 e2       	ldi	r24, 0x20	; 32
-    38da:	e8 16       	cp	r14, r24
-    38dc:	83 e0       	ldi	r24, 0x03	; 3
-    38de:	f8 06       	cpc	r15, r24
-    38e0:	28 f0       	brcs	.+10     	; 0x38ec <main+0x7c>
+    38de:	80 e2       	ldi	r24, 0x20	; 32
+    38e0:	e8 16       	cp	r14, r24
+    38e2:	83 e0       	ldi	r24, 0x03	; 3
+    38e4:	f8 06       	cpc	r15, r24
+    38e6:	28 f0       	brcs	.+10     	; 0x38f2 <main+0x82>
 			BLPORT &= ~(1<<BLPNUM);		// set to default
-    38e2:	5a 98       	cbi	0x0b, 2	; 11
+    38e8:	5a 98       	cbi	0x0b, 2	; 11
 
 
 			#ifdef ENABLE_BOOT_LED	// LED OFF
 			BIPORT &= ~(1<<BIPNUM);	
-    38e4:	5e 98       	cbi	0x0b, 6	; 11
+    38ea:	29 98       	cbi	0x05, 1	; 5
 			BIDDR  &= ~(1<<BIPNUM);
-    38e6:	56 98       	cbi	0x0a, 6	; 10
+    38ec:	21 98       	cbi	0x04, 1	; 4
 			#endif
 			jump_to_app();			// Jump to application sector
-    38e8:	f8 01       	movw	r30, r16
-    38ea:	09 95       	icall
+    38ee:	f8 01       	movw	r30, r16
+    38f0:	09 95       	icall
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-    38ec:	8f ef       	ldi	r24, 0xFF	; 255
-    38ee:	93 e2       	ldi	r25, 0x23	; 35
-    38f0:	01 97       	sbiw	r24, 0x01	; 1
-    38f2:	f1 f7       	brne	.-4      	; 0x38f0 <main+0x80>
-    38f4:	00 c0       	rjmp	.+0      	; 0x38f6 <main+0x86>
-    38f6:	00 00       	nop
-    38f8:	9f ef       	ldi	r25, 0xFF	; 255
-    38fa:	e9 1a       	sub	r14, r25
-    38fc:	f9 0a       	sbc	r15, r25
-    38fe:	e4 cf       	rjmp	.-56     	; 0x38c8 <main+0x58>
+    38f2:	8f ef       	ldi	r24, 0xFF	; 255
+    38f4:	93 e2       	ldi	r25, 0x23	; 35
+    38f6:	01 97       	sbiw	r24, 0x01	; 1
+    38f8:	f1 f7       	brne	.-4      	; 0x38f6 <main+0x86>
+    38fa:	00 c0       	rjmp	.+0      	; 0x38fc <main+0x8c>
+    38fc:	00 00       	nop
+    38fe:	9f ef       	ldi	r25, 0xFF	; 255
+    3900:	e9 1a       	sub	r14, r25
+    3902:	f9 0a       	sbc	r15, r25
+    3904:	e4 cf       	rjmp	.-56     	; 0x38ce <main+0x5e>
 		}
 
 		_delay_ms(10);
 	}
 	send_boot();
-    3900:	0e 94 22 1c 	call	0x3844	; 0x3844 <send_boot>
+    3906:	0e 94 22 1c 	call	0x3844	; 0x3844 <send_boot>
 static void (*jump_to_app)(void) = 0x0000;
 
 int main(void)
 {
 	uint16_t address = 0;
 	uint8_t device = 0, val;
-    3904:	81 2c       	mov	r8, r1
+    390a:	10 e0       	ldi	r17, 0x00	; 0
 
 static void (*jump_to_app)(void) = 0x0000;
 
 int main(void)
 {
 	uint16_t address = 0;
-    3906:	c1 2c       	mov	r12, r1
-    3908:	d1 2c       	mov	r13, r1
-
-		// Exit upgrade
-		} 
-		else if (val == 'E') 
-		{
-		wdt_enable(EXIT_WDT_TIME); // Enable Watchdog Timer to give reset
-    390a:	6c e0       	ldi	r22, 0x0C	; 12
-    390c:	36 2e       	mov	r3, r22
+    390c:	61 2c       	mov	r6, r1
+    390e:	71 2c       	mov	r7, r1
+				: "r0"
+		);
+	}
+	else
+	{
+		__asm__ __volatile__ (
+    3910:	78 e1       	ldi	r23, 0x18	; 24
+    3912:	97 2e       	mov	r9, r23
+    3914:	ec e0       	ldi	r30, 0x0C	; 12
+    3916:	8e 2e       	mov	r8, r30
 {
 	// erase only main section (bootloader protection)
 	uint32_t addr = 0;
 	while (APP_END > addr) 
 		{
 		boot_page_erase(addr);		// Perform page erase
-    390e:	73 e0       	ldi	r23, 0x03	; 3
-    3910:	67 2e       	mov	r6, r23
+    3918:	f3 e0       	ldi	r31, 0x03	; 3
+    391a:	2f 2e       	mov	r2, r31
 		boot_spm_busy_wait();		// Wait until the memory is erased.
 		addr += SPM_PAGESIZE;
 		}
 	boot_rww_enable();
-    3912:	e1 e1       	ldi	r30, 0x11	; 17
-    3914:	7e 2e       	mov	r7, r30
-
-	do 
-		{
-		data = *tmp++;
-		data |= *tmp++ << 8;
-		boot_page_fill(baddr, data);	// call asm routine.
-    3916:	55 24       	eor	r5, r5
-    3918:	53 94       	inc	r5
-		baddr += 2;			// Select next word in memory
-		size -= 2;			// Reduce number of bytes to write by two
-		} 
-	while (size);				// Loop until all bytes written
-
-	boot_page_write(pagestart);
-    391a:	f5 e0       	ldi	r31, 0x05	; 5
-    391c:	4f 2e       	mov	r4, r31
+    391c:	01 e1       	ldi	r16, 0x11	; 17
+    391e:	a0 e0       	ldi	r26, 0x00	; 0
+    3920:	aa 2e       	mov	r10, r26
+    3922:	a1 e0       	ldi	r26, 0x01	; 1
+    3924:	ba 2e       	mov	r11, r26
 #endif
 
 
 	for(;;) 
 	{
 		val = recvchar();
-    391e:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3926:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
 		// Autoincrement?
 		if (val == 'a') 
-    3922:	81 36       	cpi	r24, 0x61	; 97
-    3924:	11 f4       	brne	.+4      	; 0x392a <main+0xba>
+    392a:	81 36       	cpi	r24, 0x61	; 97
+    392c:	11 f4       	brne	.+4      	; 0x3932 <main+0xc2>
 		{
 			sendchar('Y');			// Autoincrement is quicker
-    3926:	89 e5       	ldi	r24, 0x59	; 89
-    3928:	25 c1       	rjmp	.+586    	; 0x3b74 <main+0x304>
+    392e:	89 e5       	ldi	r24, 0x59	; 89
+    3930:	2e c1       	rjmp	.+604    	; 0x3b8e <main+0x31e>
 
 		//write address
 		} 
 		else if (val == 'A') 
-    392a:	81 34       	cpi	r24, 0x41	; 65
-    392c:	49 f4       	brne	.+18     	; 0x3940 <main+0xd0>
+    3932:	81 34       	cpi	r24, 0x41	; 65
+    3934:	51 f4       	brne	.+20     	; 0x394a <main+0xda>
 		{
 			address = recvchar();		//read address 8 MSB
-    392e:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3932:	90 e0       	ldi	r25, 0x00	; 0
+    3936:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    393a:	68 2e       	mov	r6, r24
+    393c:	71 2c       	mov	r7, r1
 			address = (address<<8) | recvchar();
-    3934:	d8 2e       	mov	r13, r24
-    3936:	cc 24       	eor	r12, r12
-    3938:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    393c:	c8 2a       	or	r12, r24
-    393e:	fe c0       	rjmp	.+508    	; 0x3b3c <main+0x2cc>
+    393e:	76 2c       	mov	r7, r6
+    3940:	66 24       	eor	r6, r6
+    3942:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3946:	68 2a       	or	r6, r24
+    3948:	06 c1       	rjmp	.+524    	; 0x3b56 <main+0x2e6>
 			sendchar('\r');
 
 		// Buffer load support
 		} 
 		else if (val == 'b') 
-    3940:	82 36       	cpi	r24, 0x62	; 98
-    3942:	41 f4       	brne	.+16     	; 0x3954 <main+0xe4>
+    394a:	82 36       	cpi	r24, 0x62	; 98
+    394c:	41 f4       	brne	.+16     	; 0x395e <main+0xee>
 		{
 			sendchar('Y');					// Report buffer load supported
-    3944:	89 e5       	ldi	r24, 0x59	; 89
-    3946:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    394e:	89 e5       	ldi	r24, 0x59	; 89
+    3950:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
-    394a:	80 e0       	ldi	r24, 0x00	; 0
-    394c:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3954:	80 e0       	ldi	r24, 0x00	; 0
+    3956:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 			sendchar(sizeof(gBuffer) & 0xFF);
-    3950:	80 e8       	ldi	r24, 0x80	; 128
-    3952:	10 c1       	rjmp	.+544    	; 0x3b74 <main+0x304>
+    395a:	80 e8       	ldi	r24, 0x80	; 128
+    395c:	18 c1       	rjmp	.+560    	; 0x3b8e <main+0x31e>
 
 		// Start buffer load
 		} 
 		else if (val == 'B') 
-    3954:	82 34       	cpi	r24, 0x42	; 66
-    3956:	09 f0       	breq	.+2      	; 0x395a <main+0xea>
-    3958:	71 c0       	rjmp	.+226    	; 0x3a3c <main+0x1cc>
+    395e:	82 34       	cpi	r24, 0x42	; 66
+    3960:	09 f0       	breq	.+2      	; 0x3964 <main+0xf4>
+    3962:	76 c0       	rjmp	.+236    	; 0x3a50 <main+0x1e0>
 		{
 			pagebuf_t size;
 			size = recvchar() << 8;				// Load high byte of buffersize
-    395a:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-			size |= recvchar();				// Load low byte of buffersize
-    395e:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3962:	98 2e       	mov	r9, r24
-			val = recvchar();				// Load memory type ('E' or 'F')
     3964:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3968:	98 2f       	mov	r25, r24
-    396a:	00 e0       	ldi	r16, 0x00	; 0
-    396c:	11 e0       	ldi	r17, 0x01	; 1
+			size |= recvchar();				// Load low byte of buffersize
+    3968:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    396c:	48 2e       	mov	r4, r24
+			val = recvchar();				// Load memory type ('E' or 'F')
+    396e:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3972:	98 2f       	mov	r25, r24
+    3974:	50 e0       	ldi	r21, 0x00	; 0
+    3976:	e5 2e       	mov	r14, r21
+    3978:	51 e0       	ldi	r21, 0x01	; 1
+    397a:	f5 2e       	mov	r15, r21
 static inline void recvBuffer(pagebuf_t size)
 {
 	pagebuf_t cnt;
 	uint8_t *tmp = gBuffer;
 
 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
-    396e:	b1 2c       	mov	r11, r1
+    397c:	d1 2c       	mov	r13, r1
 		{
 		*tmp++ = (cnt < size) ? recvchar() : 0xFF;
-    3970:	b9 14       	cp	r11, r9
-    3972:	28 f4       	brcc	.+10     	; 0x397e <main+0x10e>
-    3974:	99 83       	std	Y+1, r25	; 0x01
-    3976:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    397a:	99 81       	ldd	r25, Y+1	; 0x01
-    397c:	01 c0       	rjmp	.+2      	; 0x3980 <main+0x110>
-    397e:	8f ef       	ldi	r24, 0xFF	; 255
-    3980:	f8 01       	movw	r30, r16
-    3982:	81 93       	st	Z+, r24
-    3984:	8f 01       	movw	r16, r30
+    397e:	d4 14       	cp	r13, r4
+    3980:	28 f4       	brcc	.+10     	; 0x398c <main+0x11c>
+    3982:	99 83       	std	Y+1, r25	; 0x01
+    3984:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3988:	99 81       	ldd	r25, Y+1	; 0x01
+    398a:	01 c0       	rjmp	.+2      	; 0x398e <main+0x11e>
+    398c:	8f ef       	ldi	r24, 0xFF	; 255
+    398e:	f7 01       	movw	r30, r14
+    3990:	81 93       	st	Z+, r24
+    3992:	7f 01       	movw	r14, r30
 static inline void recvBuffer(pagebuf_t size)
 {
 	pagebuf_t cnt;
 	uint8_t *tmp = gBuffer;
 
 	for (cnt = 0; cnt < sizeof(gBuffer); cnt++) 
-    3986:	b3 94       	inc	r11
-    3988:	f0 e8       	ldi	r31, 0x80	; 128
-    398a:	bf 12       	cpse	r11, r31
-    398c:	f1 cf       	rjmp	.-30     	; 0x3970 <main+0x100>
+    3994:	d3 94       	inc	r13
+    3996:	f0 e8       	ldi	r31, 0x80	; 128
+    3998:	df 12       	cpse	r13, r31
+    399a:	f1 cf       	rjmp	.-30     	; 0x397e <main+0x10e>
 			size = recvchar() << 8;				// Load high byte of buffersize
 			size |= recvchar();				// Load low byte of buffersize
 			val = recvchar();				// Load memory type ('E' or 'F')
 			recvBuffer(size);
 
 			if (device == DEVTYPE) 
-    398e:	85 e7       	ldi	r24, 0x75	; 117
-    3990:	88 12       	cpse	r8, r24
-    3992:	c6 c0       	rjmp	.+396    	; 0x3b20 <main+0x2b0>
+    399c:	15 37       	cpi	r17, 0x75	; 117
+    399e:	09 f0       	breq	.+2      	; 0x39a2 <main+0x132>
+    39a0:	cc c0       	rjmp	.+408    	; 0x3b3a <main+0x2ca>
 			{
 				if (val == 'F') 
-    3994:	96 34       	cpi	r25, 0x46	; 70
-    3996:	09 f0       	breq	.+2      	; 0x399a <main+0x12a>
-    3998:	34 c0       	rjmp	.+104    	; 0x3a02 <main+0x192>
+    39a2:	96 34       	cpi	r25, 0x46	; 70
+    39a4:	09 f0       	breq	.+2      	; 0x39a8 <main+0x138>
+    39a6:	37 c0       	rjmp	.+110    	; 0x3a16 <main+0x1a6>
 		}
 }
 
 static inline uint16_t writeFlashPage(uint16_t waddr, pagebuf_t size)
 {
 	uint32_t pagestart = (uint32_t)waddr<<1;
-    399a:	86 01       	movw	r16, r12
-    399c:	20 e0       	ldi	r18, 0x00	; 0
-    399e:	30 e0       	ldi	r19, 0x00	; 0
-    39a0:	00 0f       	add	r16, r16
-    39a2:	11 1f       	adc	r17, r17
-    39a4:	22 1f       	adc	r18, r18
-    39a6:	33 1f       	adc	r19, r19
+    39a8:	63 01       	movw	r12, r6
+    39aa:	e1 2c       	mov	r14, r1
+    39ac:	f1 2c       	mov	r15, r1
+    39ae:	cc 0c       	add	r12, r12
+    39b0:	dd 1c       	adc	r13, r13
+    39b2:	ee 1c       	adc	r14, r14
+    39b4:	ff 1c       	adc	r15, r15
 	uint32_t baddr = pagestart;
 	uint16_t data;
 	uint8_t *tmp = gBuffer;
-    39a8:	a0 e0       	ldi	r26, 0x00	; 0
-    39aa:	b1 e0       	ldi	r27, 0x01	; 1
-    39ac:	80 91 00 01 	lds	r24, 0x0100
+    39b6:	20 91 00 01 	lds	r18, 0x0100
 }
 
 static inline uint16_t writeFlashPage(uint16_t waddr, pagebuf_t size)
 {
 	uint32_t pagestart = (uint32_t)waddr<<1;
 	uint32_t baddr = pagestart;
-    39b0:	b9 01       	movw	r22, r18
-    39b2:	a8 01       	movw	r20, r16
-    39b4:	90 0e       	add	r9, r16
+    39ba:	b7 01       	movw	r22, r14
+    39bc:	a6 01       	movw	r20, r12
+	uint16_t data;
 	uint8_t *tmp = gBuffer;
+    39be:	a0 e0       	ldi	r26, 0x00	; 0
+    39c0:	b1 e0       	ldi	r27, 0x01	; 1
+    39c2:	12 96       	adiw	r26, 0x02	; 2
+    39c4:	fd 01       	movw	r30, r26
+    39c6:	31 97       	sbiw	r30, 0x01	; 1
 
 	do 
 		{
 		data = *tmp++;
 		data |= *tmp++ << 8;
-    39b6:	11 96       	adiw	r26, 0x01	; 1
-    39b8:	ec 91       	ld	r30, X
-    39ba:	11 97       	sbiw	r26, 0x01	; 1
-    39bc:	90 e0       	ldi	r25, 0x00	; 0
-    39be:	9e 2b       	or	r25, r30
+    39c8:	80 81       	ld	r24, Z
+    39ca:	30 e0       	ldi	r19, 0x00	; 0
+    39cc:	38 2b       	or	r19, r24
 		boot_page_fill(baddr, data);	// call asm routine.
-    39c0:	fa 01       	movw	r30, r20
-    39c2:	0c 01       	movw	r0, r24
-    39c4:	50 92 57 00 	sts	0x0057, r5
-    39c8:	e8 95       	spm
-    39ca:	11 24       	eor	r1, r1
+    39ce:	81 e0       	ldi	r24, 0x01	; 1
+    39d0:	fa 01       	movw	r30, r20
+    39d2:	09 01       	movw	r0, r18
+    39d4:	80 93 57 00 	sts	0x0057, r24
+    39d8:	e8 95       	spm
+    39da:	11 24       	eor	r1, r1
 
 		baddr += 2;			// Select next word in memory
-    39cc:	4e 5f       	subi	r20, 0xFE	; 254
-    39ce:	5f 4f       	sbci	r21, 0xFF	; 255
-    39d0:	6f 4f       	sbci	r22, 0xFF	; 255
-    39d2:	7f 4f       	sbci	r23, 0xFF	; 255
+    39dc:	4e 5f       	subi	r20, 0xFE	; 254
+    39de:	5f 4f       	sbci	r21, 0xFF	; 255
+    39e0:	6f 4f       	sbci	r22, 0xFF	; 255
+    39e2:	7f 4f       	sbci	r23, 0xFF	; 255
+    39e4:	8a 2d       	mov	r24, r10
+    39e6:	8a 1b       	sub	r24, r26
+    39e8:	84 0d       	add	r24, r4
 		size -= 2;			// Reduce number of bytes to write by two
 		} 
 	while (size);				// Loop until all bytes written
-    39d4:	94 16       	cp	r9, r20
-    39d6:	29 f0       	breq	.+10     	; 0x39e2 <main+0x172>
+    39ea:	11 f0       	breq	.+4      	; 0x39f0 <main+0x180>
 	uint8_t *tmp = gBuffer;
 
 	do 
 		{
 		data = *tmp++;
 		data |= *tmp++ << 8;
-    39d8:	12 96       	adiw	r26, 0x02	; 2
-    39da:	8c 91       	ld	r24, X
-    39dc:	12 97       	sbiw	r26, 0x02	; 2
-    39de:	12 96       	adiw	r26, 0x02	; 2
-    39e0:	ea cf       	rjmp	.-44     	; 0x39b6 <main+0x146>
+    39ec:	2c 91       	ld	r18, X
+    39ee:	e9 cf       	rjmp	.-46     	; 0x39c2 <main+0x152>
 		baddr += 2;			// Select next word in memory
 		size -= 2;			// Reduce number of bytes to write by two
 		} 
 	while (size);				// Loop until all bytes written
 
 	boot_page_write(pagestart);
-    39e2:	f8 01       	movw	r30, r16
-    39e4:	40 92 57 00 	sts	0x0057, r4
-    39e8:	e8 95       	spm
+    39f0:	85 e0       	ldi	r24, 0x05	; 5
+    39f2:	f6 01       	movw	r30, r12
+    39f4:	80 93 57 00 	sts	0x0057, r24
+    39f8:	e8 95       	spm
 	boot_spm_busy_wait();
-    39ea:	07 b6       	in	r0, 0x37	; 55
-    39ec:	00 fc       	sbrc	r0, 0
-    39ee:	fd cf       	rjmp	.-6      	; 0x39ea <main+0x17a>
+    39fa:	07 b6       	in	r0, 0x37	; 55
+    39fc:	00 fc       	sbrc	r0, 0
+    39fe:	fd cf       	rjmp	.-6      	; 0x39fa <main+0x18a>
 	boot_rww_enable();		// Re-enable the RWW section
-    39f0:	70 92 57 00 	sts	0x0057, r7
-    39f4:	e8 95       	spm
+    3a00:	00 93 57 00 	sts	0x0057, r16
+    3a04:	e8 95       	spm
 
 	return baddr>>1;
-    39f6:	76 95       	lsr	r23
-    39f8:	67 95       	ror	r22
-    39fa:	57 95       	ror	r21
-    39fc:	47 95       	ror	r20
-    39fe:	6a 01       	movw	r12, r20
-    3a00:	9d c0       	rjmp	.+314    	; 0x3b3c <main+0x2cc>
+    3a06:	db 01       	movw	r26, r22
+    3a08:	ca 01       	movw	r24, r20
+    3a0a:	b6 95       	lsr	r27
+    3a0c:	a7 95       	ror	r26
+    3a0e:	97 95       	ror	r25
+    3a10:	87 95       	ror	r24
+    3a12:	3c 01       	movw	r6, r24
+    3a14:	a0 c0       	rjmp	.+320    	; 0x3b56 <main+0x2e6>
 			{
 				if (val == 'F') 
 				{
 				address = writeFlashPage(address, size);
 				} 
 				else if (val == 'E') 
-    3a02:	95 34       	cpi	r25, 0x45	; 69
-    3a04:	09 f0       	breq	.+2      	; 0x3a08 <main+0x198>
-    3a06:	9a c0       	rjmp	.+308    	; 0x3b3c <main+0x2cc>
-    3a08:	00 e0       	ldi	r16, 0x00	; 0
-    3a0a:	11 e0       	ldi	r17, 0x01	; 1
-    3a0c:	c6 01       	movw	r24, r12
-    3a0e:	80 50       	subi	r24, 0x00	; 0
-    3a10:	91 40       	sbci	r25, 0x01	; 1
-    3a12:	5c 01       	movw	r10, r24
-    3a14:	f8 01       	movw	r30, r16
-    3a16:	e9 0d       	add	r30, r9
-    3a18:	2e 2e       	mov	r2, r30
-    3a1a:	c5 01       	movw	r24, r10
-    3a1c:	80 0f       	add	r24, r16
-    3a1e:	91 1f       	adc	r25, r17
+    3a16:	95 34       	cpi	r25, 0x45	; 69
+    3a18:	09 f0       	breq	.+2      	; 0x3a1c <main+0x1ac>
+    3a1a:	9d c0       	rjmp	.+314    	; 0x3b56 <main+0x2e6>
+    3a1c:	20 e0       	ldi	r18, 0x00	; 0
+    3a1e:	e2 2e       	mov	r14, r18
+    3a20:	21 e0       	ldi	r18, 0x01	; 1
+    3a22:	f2 2e       	mov	r15, r18
+    3a24:	63 01       	movw	r12, r6
+    3a26:	34 2c       	mov	r3, r4
+    3a28:	3a 0c       	add	r3, r10
 {
 	uint8_t *tmp = gBuffer;
 
 	do 
 		{
 		eeprom_write_byte( (uint8_t*)address, *tmp++ );
-    3a20:	f8 01       	movw	r30, r16
-    3a22:	61 91       	ld	r22, Z+
-    3a24:	8f 01       	movw	r16, r30
-    3a26:	0e 94 c5 1d 	call	0x3b8a	; 0x3b8a <__eewr_byte_m168p>
+    3a2a:	f7 01       	movw	r30, r14
+    3a2c:	61 91       	ld	r22, Z+
+    3a2e:	7f 01       	movw	r14, r30
+    3a30:	c6 01       	movw	r24, r12
+    3a32:	0e 94 d2 1d 	call	0x3ba4	; 0x3ba4 <eeprom_write_byte>
 		address++;			// Select next byte
+    3a36:	ff ef       	ldi	r31, 0xFF	; 255
+    3a38:	cf 1a       	sub	r12, r31
+    3a3a:	df 0a       	sbc	r13, r31
 		size--;				// Decreas number of bytes to write
 		}
 	while (size);				// Loop until all bytes written
-    3a2a:	20 12       	cpse	r2, r16
-    3a2c:	f6 cf       	rjmp	.-20     	; 0x3a1a <main+0x1aa>
-    3a2e:	ff ef       	ldi	r31, 0xFF	; 255
-    3a30:	cf 1a       	sub	r12, r31
-    3a32:	df 0a       	sbc	r13, r31
-    3a34:	9a 94       	dec	r9
-    3a36:	c9 0c       	add	r12, r9
-    3a38:	d1 1c       	adc	r13, r1
-    3a3a:	80 c0       	rjmp	.+256    	; 0x3b3c <main+0x2cc>
+    3a3c:	3e 10       	cpse	r3, r14
+    3a3e:	f5 cf       	rjmp	.-22     	; 0x3a2a <main+0x1ba>
+    3a40:	8f ef       	ldi	r24, 0xFF	; 255
+    3a42:	68 1a       	sub	r6, r24
+    3a44:	78 0a       	sbc	r7, r24
+    3a46:	8f ef       	ldi	r24, 0xFF	; 255
+    3a48:	84 0d       	add	r24, r4
+    3a4a:	68 0e       	add	r6, r24
+    3a4c:	71 1c       	adc	r7, r1
+    3a4e:	83 c0       	rjmp	.+262    	; 0x3b56 <main+0x2e6>
 			sendchar(0);
 			}
 
 		// Block read
 		} 
 		else if (val == 'g') 
-    3a3c:	87 36       	cpi	r24, 0x67	; 103
-    3a3e:	09 f0       	breq	.+2      	; 0x3a42 <main+0x1d2>
-    3a40:	3e c0       	rjmp	.+124    	; 0x3abe <main+0x24e>
+    3a50:	87 36       	cpi	r24, 0x67	; 103
+    3a52:	09 f0       	breq	.+2      	; 0x3a56 <main+0x1e6>
+    3a54:	43 c0       	rjmp	.+134    	; 0x3adc <main+0x26c>
 		{
 			pagebuf_t size;
 			size = recvchar() << 8;				// Load high byte of buffersize
-    3a42:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3a56:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
 			size |= recvchar();				// Load low byte of buffersize
-    3a46:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3a4a:	b8 2e       	mov	r11, r24
+    3a5a:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3a5e:	f8 2e       	mov	r15, r24
 			val = recvchar();				// Get memtype
-    3a4c:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3a60:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
 
 			if (val == 'F') 
-    3a50:	86 34       	cpi	r24, 0x46	; 70
-    3a52:	f9 f4       	brne	.+62     	; 0x3a92 <main+0x222>
+    3a64:	86 34       	cpi	r24, 0x46	; 70
+    3a66:	19 f5       	brne	.+70     	; 0x3aae <main+0x23e>
 	return address;
 }
 
 static inline uint16_t readFlashPage(uint16_t waddr, pagebuf_t size)
 {
 	uint32_t baddr = (uint32_t)waddr<<1;
-    3a54:	e1 2c       	mov	r14, r1
-    3a56:	f1 2c       	mov	r15, r1
-    3a58:	cc 0c       	add	r12, r12
-    3a5a:	dd 1c       	adc	r13, r13
-    3a5c:	ee 1c       	adc	r14, r14
-    3a5e:	ff 1c       	adc	r15, r15
-    3a60:	bc 0c       	add	r11, r12
+    3a68:	a3 01       	movw	r20, r6
+    3a6a:	60 e0       	ldi	r22, 0x00	; 0
+    3a6c:	70 e0       	ldi	r23, 0x00	; 0
+    3a6e:	2a 01       	movw	r4, r20
+    3a70:	3b 01       	movw	r6, r22
+    3a72:	44 0c       	add	r4, r4
+    3a74:	55 1c       	adc	r5, r5
+    3a76:	66 1c       	adc	r6, r6
+    3a78:	77 1c       	adc	r7, r7
+    3a7a:	df 2c       	mov	r13, r15
+    3a7c:	d4 0c       	add	r13, r4
 #ifndef READ_PROTECT_BOOTLOADER
 
 	#if defined(RAMPZ)
 		data = pgm_read_word_far(baddr);
 	#else
 		data = pgm_read_word_near(baddr);
-    3a62:	f6 01       	movw	r30, r12
-    3a64:	05 91       	lpm	r16, Z+
-    3a66:	14 91       	lpm	r17, Z
+    3a7e:	f2 01       	movw	r30, r4
+    3a80:	e5 90       	lpm	r14, Z+
+    3a82:	f4 90       	lpm	r15, Z
 		else 
 		{
 		data = 0xFFFF; // fake empty
 		}
 #endif
 		sendchar(data);			// send LSB
-    3a68:	80 2f       	mov	r24, r16
-    3a6a:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3a84:	8e 2d       	mov	r24, r14
+    3a86:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		sendchar((data >> 8));		// send MSB
-    3a6e:	81 2f       	mov	r24, r17
-    3a70:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3a8a:	8f 2d       	mov	r24, r15
+    3a8c:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		baddr += 2;			// Select next word in memory
-    3a74:	82 e0       	ldi	r24, 0x02	; 2
-    3a76:	c8 0e       	add	r12, r24
-    3a78:	d1 1c       	adc	r13, r1
-    3a7a:	e1 1c       	adc	r14, r1
-    3a7c:	f1 1c       	adc	r15, r1
+    3a90:	92 e0       	ldi	r25, 0x02	; 2
+    3a92:	49 0e       	add	r4, r25
+    3a94:	51 1c       	adc	r5, r1
+    3a96:	61 1c       	adc	r6, r1
+    3a98:	71 1c       	adc	r7, r1
 		size -= 2;			// Subtract two bytes from number of bytes to read
 	} 
 	while (size);				// Repeat until block has been read
-    3a7e:	bc 10       	cpse	r11, r12
-    3a80:	f0 cf       	rjmp	.-32     	; 0x3a62 <main+0x1f2>
+    3a9a:	d4 10       	cpse	r13, r4
+    3a9c:	f0 cf       	rjmp	.-32     	; 0x3a7e <main+0x20e>
 	return baddr>>1;
-    3a82:	b7 01       	movw	r22, r14
-    3a84:	a6 01       	movw	r20, r12
-    3a86:	76 95       	lsr	r23
-    3a88:	67 95       	ror	r22
-    3a8a:	57 95       	ror	r21
-    3a8c:	47 95       	ror	r20
-    3a8e:	6a 01       	movw	r12, r20
-    3a90:	46 cf       	rjmp	.-372    	; 0x391e <main+0xae>
+    3a9e:	b3 01       	movw	r22, r6
+    3aa0:	a2 01       	movw	r20, r4
+    3aa2:	76 95       	lsr	r23
+    3aa4:	67 95       	ror	r22
+    3aa6:	57 95       	ror	r21
+    3aa8:	47 95       	ror	r20
+    3aaa:	3a 01       	movw	r6, r20
+    3aac:	3c cf       	rjmp	.-392    	; 0x3926 <main+0xb6>
 
 			if (val == 'F') 
 			{
 			address = readFlashPage(address, size);
 			} 
 			else if (val == 'E') 
-    3a92:	85 34       	cpi	r24, 0x45	; 69
-    3a94:	09 f0       	breq	.+2      	; 0x3a98 <main+0x228>
-    3a96:	43 cf       	rjmp	.-378    	; 0x391e <main+0xae>
-    3a98:	86 01       	movw	r16, r12
-    3a9a:	ac 2c       	mov	r10, r12
-    3a9c:	ab 0c       	add	r10, r11
+    3aae:	85 34       	cpi	r24, 0x45	; 69
+    3ab0:	09 f0       	breq	.+2      	; 0x3ab4 <main+0x244>
+    3ab2:	39 cf       	rjmp	.-398    	; 0x3926 <main+0xb6>
+    3ab4:	63 01       	movw	r12, r6
+    3ab6:	e6 2c       	mov	r14, r6
+    3ab8:	ef 0c       	add	r14, r15
 
 static inline uint16_t readEEpromPage(uint16_t address, pagebuf_t size)
 {
 	do 
 	{
 	sendchar( eeprom_read_byte( (uint8_t*)address ) );
-    3a9e:	c8 01       	movw	r24, r16
-    3aa0:	0e 94 bd 1d 	call	0x3b7a	; 0x3b7a <__eerd_byte_m168p>
-    3aa4:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3aba:	c6 01       	movw	r24, r12
+    3abc:	0e 94 ca 1d 	call	0x3b94	; 0x3b94 <eeprom_read_byte>
+    3ac0:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 	address++;
-    3aa8:	0f 5f       	subi	r16, 0xFF	; 255
-    3aaa:	1f 4f       	sbci	r17, 0xFF	; 255
+    3ac4:	ef ef       	ldi	r30, 0xFF	; 255
+    3ac6:	ce 1a       	sub	r12, r30
+    3ac8:	de 0a       	sbc	r13, r30
 	size--;				// Decrease number of bytes to read
 	} 
 	while (size);				// Repeat until block has been read
-    3aac:	a0 12       	cpse	r10, r16
-    3aae:	f7 cf       	rjmp	.-18     	; 0x3a9e <main+0x22e>
-    3ab0:	9f ef       	ldi	r25, 0xFF	; 255
-    3ab2:	c9 1a       	sub	r12, r25
-    3ab4:	d9 0a       	sbc	r13, r25
-    3ab6:	ba 94       	dec	r11
-    3ab8:	cb 0c       	add	r12, r11
-    3aba:	d1 1c       	adc	r13, r1
-    3abc:	30 cf       	rjmp	.-416    	; 0x391e <main+0xae>
+    3aca:	ec 10       	cpse	r14, r12
+    3acc:	f6 cf       	rjmp	.-20     	; 0x3aba <main+0x24a>
+    3ace:	ff ef       	ldi	r31, 0xFF	; 255
+    3ad0:	6f 1a       	sub	r6, r31
+    3ad2:	7f 0a       	sbc	r7, r31
+    3ad4:	fa 94       	dec	r15
+    3ad6:	6f 0c       	add	r6, r15
+    3ad8:	71 1c       	adc	r7, r1
+    3ada:	25 cf       	rjmp	.-438    	; 0x3926 <main+0xb6>
 			address = readEEpromPage(address, size);
 			}
 
 		// Chip erase
  		} 
 		else if (val == 'e') 
-    3abe:	85 36       	cpi	r24, 0x65	; 101
-    3ac0:	a9 f4       	brne	.+42     	; 0x3aec <main+0x27c>
+    3adc:	85 36       	cpi	r24, 0x65	; 101
+    3ade:	a9 f4       	brne	.+42     	; 0x3b0a <main+0x29a>
 		{
 		if (device == DEVTYPE) 
-    3ac2:	e5 e7       	ldi	r30, 0x75	; 117
-    3ac4:	8e 12       	cpse	r8, r30
-    3ac6:	3a c0       	rjmp	.+116    	; 0x3b3c <main+0x2cc>
-    3ac8:	e0 e0       	ldi	r30, 0x00	; 0
-    3aca:	f0 e0       	ldi	r31, 0x00	; 0
+    3ae0:	15 37       	cpi	r17, 0x75	; 117
+    3ae2:	09 f0       	breq	.+2      	; 0x3ae6 <main+0x276>
+    3ae4:	38 c0       	rjmp	.+112    	; 0x3b56 <main+0x2e6>
+    3ae6:	e0 e0       	ldi	r30, 0x00	; 0
+    3ae8:	f0 e0       	ldi	r31, 0x00	; 0
 {
 	// erase only main section (bootloader protection)
 	uint32_t addr = 0;
 	while (APP_END > addr) 
 		{
 		boot_page_erase(addr);		// Perform page erase
-    3acc:	60 92 57 00 	sts	0x0057, r6
-    3ad0:	e8 95       	spm
+    3aea:	20 92 57 00 	sts	0x0057, r2
+    3aee:	e8 95       	spm
 		boot_spm_busy_wait();		// Wait until the memory is erased.
-    3ad2:	07 b6       	in	r0, 0x37	; 55
-    3ad4:	00 fc       	sbrc	r0, 0
-    3ad6:	fd cf       	rjmp	.-6      	; 0x3ad2 <main+0x262>
-    3ad8:	e0 58       	subi	r30, 0x80	; 128
-    3ada:	ff 4f       	sbci	r31, 0xFF	; 255
+    3af0:	07 b6       	in	r0, 0x37	; 55
+    3af2:	00 fc       	sbrc	r0, 0
+    3af4:	fd cf       	rjmp	.-6      	; 0x3af0 <main+0x280>
+    3af6:	e0 58       	subi	r30, 0x80	; 128
+    3af8:	ff 4f       	sbci	r31, 0xFF	; 255
 
 static inline void eraseFlash(void)
 {
 	// erase only main section (bootloader protection)
 	uint32_t addr = 0;
 	while (APP_END > addr) 
-    3adc:	e1 15       	cp	r30, r1
-    3ade:	88 e3       	ldi	r24, 0x38	; 56
-    3ae0:	f8 07       	cpc	r31, r24
-    3ae2:	a1 f7       	brne	.-24     	; 0x3acc <main+0x25c>
+    3afa:	e1 15       	cp	r30, r1
+    3afc:	88 e3       	ldi	r24, 0x38	; 56
+    3afe:	f8 07       	cpc	r31, r24
+    3b00:	a1 f7       	brne	.-24     	; 0x3aea <main+0x27a>
 		{
 		boot_page_erase(addr);		// Perform page erase
 		boot_spm_busy_wait();		// Wait until the memory is erased.
 		addr += SPM_PAGESIZE;
 		}
 	boot_rww_enable();
-    3ae4:	70 92 57 00 	sts	0x0057, r7
-    3ae8:	e8 95       	spm
-    3aea:	28 c0       	rjmp	.+80     	; 0x3b3c <main+0x2cc>
+    3b02:	00 93 57 00 	sts	0x0057, r16
+    3b06:	e8 95       	spm
+    3b08:	26 c0       	rjmp	.+76     	; 0x3b56 <main+0x2e6>
 			}
 		sendchar('\r');
 
 		// Exit upgrade
 		} 
 		else if (val == 'E') 
-    3aec:	85 34       	cpi	r24, 0x45	; 69
-    3aee:	59 f4       	brne	.+22     	; 0x3b06 <main+0x296>
-		{
-		wdt_enable(EXIT_WDT_TIME); // Enable Watchdog Timer to give reset
-    3af0:	e8 e1       	ldi	r30, 0x18	; 24
-    3af2:	f0 e0       	ldi	r31, 0x00	; 0
-    3af4:	0f b6       	in	r0, 0x3f	; 63
-    3af6:	f8 94       	cli
-    3af8:	a8 95       	wdr
-    3afa:	e0 93 60 00 	sts	0x0060, r30
-    3afe:	0f be       	out	0x3f, r0	; 63
-    3b00:	30 92 60 00 	sts	0x0060, r3
-    3b04:	1b c0       	rjmp	.+54     	; 0x3b3c <main+0x2cc>
+    3b0a:	85 34       	cpi	r24, 0x45	; 69
+    3b0c:	49 f4       	brne	.+18     	; 0x3b20 <main+0x2b0>
+    3b0e:	0f b6       	in	r0, 0x3f	; 63
+    3b10:	f8 94       	cli
+    3b12:	a8 95       	wdr
+    3b14:	90 92 60 00 	sts	0x0060, r9
+    3b18:	0f be       	out	0x3f, r0	; 63
+    3b1a:	80 92 60 00 	sts	0x0060, r8
+    3b1e:	1b c0       	rjmp	.+54     	; 0x3b56 <main+0x2e6>
 				}
 			sendchar('\r');
 		#endif
 		// Enter programming mode
 		} 
 		else if (val == 'P') 
-    3b06:	80 35       	cpi	r24, 0x50	; 80
-    3b08:	c9 f0       	breq	.+50     	; 0x3b3c <main+0x2cc>
+    3b20:	80 35       	cpi	r24, 0x50	; 80
+    3b22:	c9 f0       	breq	.+50     	; 0x3b56 <main+0x2e6>
 		{
 		sendchar('\r');
 
 		// Leave programming mode
 		} 
 		else if (val == 'L') 
-    3b0a:	8c 34       	cpi	r24, 0x4C	; 76
-    3b0c:	b9 f0       	breq	.+46     	; 0x3b3c <main+0x2cc>
+    3b24:	8c 34       	cpi	r24, 0x4C	; 76
+    3b26:	b9 f0       	breq	.+46     	; 0x3b56 <main+0x2e6>
 		{
 		sendchar('\r');
 		// return programmer type
 		} 
 		else if (val == 'p') 
-    3b0e:	80 37       	cpi	r24, 0x70	; 112
-    3b10:	11 f4       	brne	.+4      	; 0x3b16 <main+0x2a6>
+    3b28:	80 37       	cpi	r24, 0x70	; 112
+    3b2a:	11 f4       	brne	.+4      	; 0x3b30 <main+0x2c0>
 		{
 		sendchar('S');		// always serial programmer
-    3b12:	83 e5       	ldi	r24, 0x53	; 83
-    3b14:	2f c0       	rjmp	.+94     	; 0x3b74 <main+0x304>
+    3b2c:	83 e5       	ldi	r24, 0x53	; 83
+    3b2e:	2f c0       	rjmp	.+94     	; 0x3b8e <main+0x31e>
 			sendchar(read_fuse_lock(GET_EXTENDED_FUSE_BITS));
 			#endif
 
 		// Return device type
 		} 
 		else if (val == 't') 
-    3b16:	84 37       	cpi	r24, 0x74	; 116
-    3b18:	29 f4       	brne	.+10     	; 0x3b24 <main+0x2b4>
+    3b30:	84 37       	cpi	r24, 0x74	; 116
+    3b32:	29 f4       	brne	.+10     	; 0x3b3e <main+0x2ce>
 		{
 		sendchar(DEVTYPE);
-    3b1a:	85 e7       	ldi	r24, 0x75	; 117
-    3b1c:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3b34:	85 e7       	ldi	r24, 0x75	; 117
+    3b36:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		sendchar(0);
-    3b20:	80 e0       	ldi	r24, 0x00	; 0
-    3b22:	28 c0       	rjmp	.+80     	; 0x3b74 <main+0x304>
+    3b3a:	80 e0       	ldi	r24, 0x00	; 0
+    3b3c:	28 c0       	rjmp	.+80     	; 0x3b8e <main+0x31e>
 		// clear and set LED ignored
 		} 
 		else if ((val == 'x') || (val == 'y')) 
-    3b24:	98 e8       	ldi	r25, 0x88	; 136
-    3b26:	98 0f       	add	r25, r24
-    3b28:	92 30       	cpi	r25, 0x02	; 2
-    3b2a:	18 f4       	brcc	.+6      	; 0x3b32 <main+0x2c2>
+    3b3e:	98 e8       	ldi	r25, 0x88	; 136
+    3b40:	98 0f       	add	r25, r24
+    3b42:	92 30       	cpi	r25, 0x02	; 2
+    3b44:	18 f4       	brcc	.+6      	; 0x3b4c <main+0x2dc>
 		{
 		recvchar();
-    3b2c:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3b30:	05 c0       	rjmp	.+10     	; 0x3b3c <main+0x2cc>
+    3b46:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3b4a:	05 c0       	rjmp	.+10     	; 0x3b56 <main+0x2e6>
 		sendchar('\r');
 
 		// set device
 		} 
 		else if (val == 'T') 
-    3b32:	84 35       	cpi	r24, 0x54	; 84
-    3b34:	29 f4       	brne	.+10     	; 0x3b40 <main+0x2d0>
+    3b4c:	84 35       	cpi	r24, 0x54	; 84
+    3b4e:	29 f4       	brne	.+10     	; 0x3b5a <main+0x2ea>
 		{
 		device = recvchar();
-    3b36:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
-    3b3a:	88 2e       	mov	r8, r24
+    3b50:	0e 94 1b 1c 	call	0x3836	; 0x3836 <recvchar>
+    3b54:	18 2f       	mov	r17, r24
 		sendchar('\r');
-    3b3c:	8d e0       	ldi	r24, 0x0D	; 13
-    3b3e:	1a c0       	rjmp	.+52     	; 0x3b74 <main+0x304>
+    3b56:	8d e0       	ldi	r24, 0x0D	; 13
+    3b58:	1a c0       	rjmp	.+52     	; 0x3b8e <main+0x31e>
 		// Return software identifier
 		} 
 		else if (val == 'S') 
-    3b40:	83 35       	cpi	r24, 0x53	; 83
-    3b42:	19 f4       	brne	.+6      	; 0x3b4a <main+0x2da>
+    3b5a:	83 35       	cpi	r24, 0x53	; 83
+    3b5c:	19 f4       	brne	.+6      	; 0x3b64 <main+0x2f4>
 		{
 		send_boot();
-    3b44:	0e 94 22 1c 	call	0x3844	; 0x3844 <send_boot>
-    3b48:	ea ce       	rjmp	.-556    	; 0x391e <main+0xae>
+    3b5e:	0e 94 22 1c 	call	0x3844	; 0x3844 <send_boot>
+    3b62:	e1 ce       	rjmp	.-574    	; 0x3926 <main+0xb6>
 
 		// Return Software Version
 		} 
 		else if (val == 'V') {
-    3b4a:	86 35       	cpi	r24, 0x56	; 86
-    3b4c:	29 f4       	brne	.+10     	; 0x3b58 <main+0x2e8>
+    3b64:	86 35       	cpi	r24, 0x56	; 86
+    3b66:	29 f4       	brne	.+10     	; 0x3b72 <main+0x302>
 		sendchar(VERSION_HIGH);
-    3b4e:	80 e3       	ldi	r24, 0x30	; 48
-    3b50:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3b68:	80 e3       	ldi	r24, 0x30	; 48
+    3b6a:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		sendchar(VERSION_LOW);
-    3b54:	88 e3       	ldi	r24, 0x38	; 56
-    3b56:	0e c0       	rjmp	.+28     	; 0x3b74 <main+0x304>
+    3b6e:	88 e3       	ldi	r24, 0x38	; 56
+    3b70:	0e c0       	rjmp	.+28     	; 0x3b8e <main+0x31e>
 
 		// Return Signature Bytes (it seems that 
 		// AVRProg expects the "Atmel-byte" 0x1E last
 		// but shows it first in the dialog-window)
 		} 
 		else if (val == 's') 
-    3b58:	83 37       	cpi	r24, 0x73	; 115
-    3b5a:	41 f4       	brne	.+16     	; 0x3b6c <main+0x2fc>
+    3b72:	83 37       	cpi	r24, 0x73	; 115
+    3b74:	41 f4       	brne	.+16     	; 0x3b86 <main+0x316>
 		{
 		sendchar(SIG_BYTE3);
-    3b5c:	8b e0       	ldi	r24, 0x0B	; 11
-    3b5e:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3b76:	8b e0       	ldi	r24, 0x0B	; 11
+    3b78:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		sendchar(SIG_BYTE2);
-    3b62:	84 e9       	ldi	r24, 0x94	; 148
-    3b64:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3b7c:	84 e9       	ldi	r24, 0x94	; 148
+    3b7e:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
 		sendchar(SIG_BYTE1);
-    3b68:	8e e1       	ldi	r24, 0x1E	; 30
-    3b6a:	04 c0       	rjmp	.+8      	; 0x3b74 <main+0x304>
+    3b82:	8e e1       	ldi	r24, 0x1E	; 30
+    3b84:	04 c0       	rjmp	.+8      	; 0x3b8e <main+0x31e>
 
 		/* ESC */
 		} 
 		else if(val != 0x1b) 
-    3b6c:	8b 31       	cpi	r24, 0x1B	; 27
-    3b6e:	09 f4       	brne	.+2      	; 0x3b72 <main+0x302>
-    3b70:	d6 ce       	rjmp	.-596    	; 0x391e <main+0xae>
+    3b86:	8b 31       	cpi	r24, 0x1B	; 27
+    3b88:	09 f4       	brne	.+2      	; 0x3b8c <main+0x31c>
+    3b8a:	cd ce       	rjmp	.-614    	; 0x3926 <main+0xb6>
 		{
 		sendchar('?');
-    3b72:	8f e3       	ldi	r24, 0x3F	; 63
-    3b74:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
-    3b78:	d2 ce       	rjmp	.-604    	; 0x391e <main+0xae>
+    3b8c:	8f e3       	ldi	r24, 0x3F	; 63
+    3b8e:	0e 94 14 1c 	call	0x3828	; 0x3828 <sendchar>
+    3b92:	c9 ce       	rjmp	.-622    	; 0x3926 <main+0xb6>
 
-00003b7a <__eerd_byte_m168p>:
-    3b7a:	f9 99       	sbic	0x1f, 1	; 31
-    3b7c:	fe cf       	rjmp	.-4      	; 0x3b7a <__eerd_byte_m168p>
-    3b7e:	92 bd       	out	0x22, r25	; 34
-    3b80:	81 bd       	out	0x21, r24	; 33
-    3b82:	f8 9a       	sbi	0x1f, 0	; 31
-    3b84:	99 27       	eor	r25, r25
-    3b86:	80 b5       	in	r24, 0x20	; 32
-    3b88:	08 95       	ret
+00003b94 <eeprom_read_byte>:
+    3b94:	f9 99       	sbic	0x1f, 1	; 31
+    3b96:	fe cf       	rjmp	.-4      	; 0x3b94 <eeprom_read_byte>
+    3b98:	92 bd       	out	0x22, r25	; 34
+    3b9a:	81 bd       	out	0x21, r24	; 33
+    3b9c:	f8 9a       	sbi	0x1f, 0	; 31
+    3b9e:	99 27       	eor	r25, r25
+    3ba0:	80 b5       	in	r24, 0x20	; 32
+    3ba2:	08 95       	ret
 
-00003b8a <__eewr_byte_m168p>:
-    3b8a:	26 2f       	mov	r18, r22
+00003ba4 <eeprom_write_byte>:
+    3ba4:	26 2f       	mov	r18, r22
 
-00003b8c <__eewr_r18_m168p>:
-    3b8c:	f9 99       	sbic	0x1f, 1	; 31
-    3b8e:	fe cf       	rjmp	.-4      	; 0x3b8c <__eewr_r18_m168p>
-    3b90:	1f ba       	out	0x1f, r1	; 31
-    3b92:	92 bd       	out	0x22, r25	; 34
-    3b94:	81 bd       	out	0x21, r24	; 33
-    3b96:	20 bd       	out	0x20, r18	; 32
-    3b98:	0f b6       	in	r0, 0x3f	; 63
-    3b9a:	f8 94       	cli
-    3b9c:	fa 9a       	sbi	0x1f, 2	; 31
-    3b9e:	f9 9a       	sbi	0x1f, 1	; 31
-    3ba0:	0f be       	out	0x3f, r0	; 63
-    3ba2:	01 96       	adiw	r24, 0x01	; 1
-    3ba4:	08 95       	ret
+00003ba6 <eeprom_write_r18>:
+    3ba6:	f9 99       	sbic	0x1f, 1	; 31
+    3ba8:	fe cf       	rjmp	.-4      	; 0x3ba6 <eeprom_write_r18>
+    3baa:	1f ba       	out	0x1f, r1	; 31
+    3bac:	92 bd       	out	0x22, r25	; 34
+    3bae:	81 bd       	out	0x21, r24	; 33
+    3bb0:	20 bd       	out	0x20, r18	; 32
+    3bb2:	0f b6       	in	r0, 0x3f	; 63
+    3bb4:	f8 94       	cli
+    3bb6:	fa 9a       	sbi	0x1f, 2	; 31
+    3bb8:	f9 9a       	sbi	0x1f, 1	; 31
+    3bba:	0f be       	out	0x3f, r0	; 63
+    3bbc:	01 96       	adiw	r24, 0x01	; 1
+    3bbe:	08 95       	ret
 
-00003ba6 <_exit>:
-    3ba6:	f8 94       	cli
+00003bc0 <_exit>:
+    3bc0:	f8 94       	cli
 
-00003ba8 <__stop_program>:
-    3ba8:	ff cf       	rjmp	.-2      	; 0x3ba8 <__stop_program>
+00003bc2 <__stop_program>:
+    3bc2:	ff cf       	rjmp	.-2      	; 0x3bc2 <__stop_program>

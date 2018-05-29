@@ -2,8 +2,8 @@
 DEVICE     = atmega168p
 CLOCK      = 3686400L
 PROGRAMMER = -c usbasp
-OBJECTS    = globals.o main.o uart.o uart_proto.o init.o ds18b20.o adc.o onewire.o romsearch.o
-BAUD	   = 2
+OBJECTS    = main.o init.o globals.o uart.o uart_proto.o ds18b20.o onewire.o romsearch.o adc.o
+BAUD	   = 3
 PORT       = /dev/tty.wchusbserial1420
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B $(BAUD) -v
@@ -11,7 +11,10 @@ AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B $(BAUD) -v
 
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -DUART_RX0_BUFFER_SIZE=16 -DUART_TX0_BUFFER_SIZE=128
 
-all:	main.hex main.eep
+all: build
+	$(AVRDUDE) -U flash:w:main.hex:i
+
+build:	main.hex main.eep
 
 .c.o:
 	$(COMPILE) -c $< -o $@
