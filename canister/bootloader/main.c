@@ -38,9 +38,13 @@
 /* Частота контроллера (кварца) */
 #define F_CPU 3686400UL
 
-//TODO: TURN ON BT
+#define LDO_ON 			(PORTD |=  (1 << PD7))
+#define LDO_OFF			(PORTD &= ~(1 << PD7))
 
-#define BAUDRATE 38400UL
+#define BT_RESET_HIGH 	(PORTD |=  (1 << PD5))
+#define BT_RESET_LOW	(PORTD &= ~(1 << PD5))
+
+#define BAUDRATE 9600UL
 
 
 #define DEVTYPE     DEVTYPE_BOOT
@@ -55,13 +59,9 @@
 #define BLPNUM		PIND2
 
 
-#define PWRPORT		PORTD
-#define PWRDDR		DDRD
-#define PWRPNUM		PIND7
-
 
 /*
- * GREEN LED on - we are in bootloader
+ * BLUE LED on - we are in bootloader
  */
 
 #define ENABLE_BOOT_LED
@@ -79,16 +79,11 @@
  */
 #define EXIT_WDT_TIME   WDTO_250MS
 
-// #define START_SIMPLE
-#define START_WAIT
-//#define START_POWERSAVE
-//#define START_BOOTICE
-
 /* Команда для входа в загрузчик в START_WAIT */
 #define START_WAIT_UARTCHAR 'S'
 
 /* Выдержка для START_WAIT mode ( t = WAIT_TIME * 10ms ) */
-#define WAIT_VALUE 800 /* 800*10ms = 8sec */
+#define WAIT_VALUE 1500 /* 1500*10ms = 15sec */
 
 /*
  * enable/disable readout of fuse and lock-bits
@@ -318,6 +313,17 @@ static void send_boot(void)
 
 static void (*jump_to_app)(void) = 0x0000;
 
+static void init_bt(void)
+{
+	DDRD |= (1 << PD7); // LDO control output pin -> output	
+	DDRD |= (1 << PD5); // BT reset pin -> output
+	// LDO_OFF;			// reset everything (including BT)
+	// BT_RESET_LOW;
+	// _delay_ms(100);
+	LDO_ON;
+	BT_RESET_HIGH;
+}
+
 int main(void)
 {
 	uint16_t address = 0;
@@ -362,80 +368,14 @@ int main(void)
 
 	UART_CTRL = UART_CTRL_DATA;
 	UART_CTRL2 = UART_CTRL2_DATA;
+
+
 	
-#if defined(START_POWERSAVE)
-	/*
-		This is an adoption of the Butterfly Bootloader startup-sequence.
-		It may look a little strange but separating the login-loop from
-		the main parser-loop gives a lot a possibilities (timeout, sleep-modes
-	    etc.).
-	*/
-	for(;OK;) 
-	{
-		if ((BLPIN & (1<<BLPNUM))) 
-		{
-		// jump to main app if pin is not grounded
-		BLPORT &= ~(1<<BLPNUM);	// set to default
-
-		#ifdef UART_DOUBLESPEED
-			UART_STATUS &= ~( 1<<UART_DOUBLE );
-		#endif
-
-
-		#ifdef ENABLE_BOOT_LED	// LED OFF
-		BIPORT &= ~(1<<BIPNUM);	
-		BIDDR  &= ~(1<<BIPNUM);
-		#endif
-
-		jump_to_app();		// Jump to application sector
-
-		} 
-		else 
-		{
-		val = recvchar();
-		/* ESC */
-			if (val == 0x1B) 
-			{
-				// AVRPROG connection
-				// Wait for signon
-				while (val != 'S')
-				val = recvchar();
-				
-				send_boot();			// Report signon
-				OK = 0;
-			} 
-			else 
-			{
-			sendchar('?');
-			}
-	    }
-		// Power-Save code here
-	}
-
-#elif defined(START_SIMPLE)
-
-	if ((BLPIN & (1<<BLPNUM))) {
-		// jump to main app if pin is not grounded
-		BLPORT &= ~(1<<BLPNUM);		// set to default	
-			
-	#ifdef UART_DOUBLESPEED
-		UART_STATUS &= ~( 1<<UART_DOUBLE );
-	#endif
-
-		#ifdef ENABLE_BOOT_LED	// LED OFF
-		BIPORT &= ~(1<<BIPNUM);	
-		BIDDR  &= ~(1<<BIPNUM);
-		#endif
-
-		jump_to_app();			// Jump to application sector
-	}
-
-#elif defined(START_WAIT)
-
-	PWRPORT |=  (1<<PWRPNUM); // TURN ON Bluetooth module
-	PWRDDR  |=  (1<<PWRPNUM);
+	init_bt();
 
 	uint16_t cnt = 0;
+
+	PORTD |= (1 << PD2); //internal pullup for button;
 
 	while (1) {
 		if (UART_STATUS & (1<<UART_RXREADY))
@@ -452,18 +392,23 @@ int main(void)
 			#endif
 			jump_to_app();			// Jump to application sector
 		}
+		// if(!(PIND & (1<<PIND2))){ //button pressed
+		// 	_delay_ms(200);
+		// 	while(!(PIND & (1<<PIND2))){};
+		// 	BLPORT &= ~(1<<BLPNUM);		// set to default
+		// 	PORTD = 0;
+		// 	BT_RESET_HIGH;
+
+		// 	#ifdef ENABLE_BOOT_LED	// LED OFF
+		// 	BIPORT &= ~(1<<BIPNUM);	
+		// 	BIDDR  &= ~(1<<BIPNUM);
+		// 	#endif
+		// 	jump_to_app();			// Jump to application sector
+		// }
 
 		_delay_ms(10);
 	}
 	send_boot();
-
-#elif defined(START_BOOTICE)
-#warning "BOOTICE mode - no startup-condition"
-
-#else
-#error "Select START_ condition for bootloader in main.c"
-#endif
-
 
 	for(;;) 
 	{

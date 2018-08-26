@@ -17,7 +17,7 @@ ISR(INT0_vect){
 	// EIFR = 0b00000011;//lets clear interrupt flags
 	
 	_delay_ms(1);
-	if(PIND & (1<<PIND2)){ //will ignore very short pulsed
+	if(PIND & (1<<PIND2)){ //will ignore very short pulses
 		sei();
 		return;
 	}
@@ -35,9 +35,15 @@ ISR(INT0_vect){
 
 ISR(INT1_vect){ //external power is on!
 	cli();
+	_delay_ms(200);
+	if(PIND & (1<<PIND3)){ //will ignore very short pulses
+		sei();
+		return;
+	}
 	// EIFR = 0b00000011;//lets clear interrupt flags
 	EIMSK &= ~(1<<1); //turn off int1. will reenable before sleep
 	should_on = 1;
+	should_off = 0;
 	_delay_ms(2);
 	sei();
 }
@@ -107,34 +113,27 @@ void process_leakage(){
 	is_leaking = (PINC & (1<<PC3)) ? 0 : 1;
 }
 
-void bt_init(){
-	// DDRD |=  (1 << PD4);
-	// DDRD |=  (1 << PD5);
-	// DDRD |=  (1 << PD7);
-	// BT_CMD_OFF;
-	// BT_RESET_OFF;
-}
-
 void turn_on(){
 	cli();
 	PRR &= ~(1 << PRUSART0); //reenable uart
 	PRR &= ~(1 << PRADC); //reenable adc
 	init_timer();
 	init_adc();
-	bt_init();
-	uart0_init(UART_BAUD_SELECT(38400UL, F_CPU));
+	uart0_init(UART_BAUD_SELECT(9600UL, F_CPU));
 	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
 	PORTB |= (1 << PB3); // Pullup for overcurent input pin
 	LDO_ON;
 	OUT_ON;
 	MEASURE_ON;
+	DDRD |= (1 << PD5); // BT reset pin -> output
+	BT_RESET_HIGH;
 	is_on = 1;
 	sei();
 }
 
 void turn_off(){
 	cli();
-	//TODO: BT deinit
+	UCSR0B = 0;	//deinit UART
 	is_on = 0;
 	global_counter = 0;
 	adc_ready = 0;
@@ -160,7 +159,6 @@ void init(){
 	reset_wdt();
 	init_LED();
 	interrupts_init();
-	bt_init();
 
 	DDRB |= (1 << PB4); // Current Measure ouput pin -> output
 	DDRB |= (1 << PB5); // Main Output pin -> output

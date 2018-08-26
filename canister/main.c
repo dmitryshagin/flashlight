@@ -9,6 +9,14 @@
 #include "uart.h"
 #include "uart_proto.h"
 
+//910 - 12.230V
+// 1 LSB ADC ~= 0,01343956044V
+//10V - 744 ADC
+//10.8V - 804 ADC
+#define LOW_LIMIT 744
+#define MEDIUM_LIMIT 804
+#define HYSTERESIS 2
+
 void process_LED(){
 	if( is_on ){ //Is output on?
 		if(is_leaking){
@@ -29,24 +37,26 @@ void process_LED(){
 				}else{
 					val = blinker * 0xF;
 				}
-				// set_LED(0,val,0);
-				//TODO - fine-tune voltages
-				// if(adc_values[0] < 800){
-					set_LED(0,0,val);
-				// }else{
-					// set_LED(0,val,0);
-				// }
+				set_LED(0,0,val/2); //not too bright
 			}else{
-				//TODO: ugly hack. need to calculate proper value for ADC limits.
-				//TODO; need some hysteresis to prevent multible swithing on borders
-				//now 934 = 12.6V
-				//let's limit at 10 & 10.8V;
-				if(adc_values[0] < 740){
+				if(adc_values[0] < LOW_LIMIT){
 					set_LED(0xFF,0,0);
-				}else if(adc_values[0] < 800){
+				}else if(adc_values[0] > (LOW_LIMIT + HYSTERESIS) &&
+				   		 adc_values[0] < MEDIUM_LIMIT){
 					set_LED(0,0,0xFF);
-				}else{
+				}else if(adc_values[0] > (MEDIUM_LIMIT + HYSTERESIS)){
 					set_LED(0,0xFF,0);
+				}
+
+				//just started app and hit inside hysteresis value
+				if(OCR1B == 0 && OCR1A == 0 && OCR0A == 0xFF){
+					if(adc_values[0] < LOW_LIMIT){
+						set_LED(0xFF,0,0);
+					}else if(adc_values[0] < MEDIUM_LIMIT){
+						set_LED(0,0,0xFF);
+					}else{
+						set_LED(0,0xFF,0);
+					}					
 				}
 			}
 		}
@@ -104,13 +114,7 @@ int main(void){
 			process_LED();
 		}
 		
-		// char _tmpstr[UART_RX0_BUFFER_SIZE];
 		if(last_processed_counter != global_counter){
-			// if(adc_ready){
-				// sprintf(_tmpstr, "%04d\n\r", adc_values[0]);
-				// uart0_puts(_tmpstr);
-			// }
-
 			last_processed_counter = global_counter;
 		}
 	};

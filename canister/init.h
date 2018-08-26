@@ -54,8 +54,9 @@
 #define MEASURE_ON  	(PORTB &= ~(1 << PB4))
 #define MEASURE_OFF		(PORTB |=  (1 << PB4))
 
-#define LDO_ON 			(PORTD |=  (1 << PD7))
-#define LDO_OFF			(PORTD &= ~(1 << PD7))
+#define BT_RESET_HIGH 	(PORTD |=  (1 << PD5))
+#define BT_RESET_LOW	(PORTD &= ~(1 << PD5))
+
 
 
 void init();

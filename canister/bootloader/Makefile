@@ -366,10 +366,24 @@ gccversion :
 	@$(CC) --version
 
 
+fuse: all
+	#default:
+	# $(AVRDUDE) -U lfuse:w:0x62:m -U hfuse:w:0xdf:m
+	# $(AVRDUDE) -U efuse:w:0x01:m
+
+	#BOD OFF, WDTOFF 8Mhz
+	# $(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0x01:m
+
+	#BOD OFF, WDTON 8Mhz
+	# $(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xcf:m -U efuse:w:0xf9:m
+
+	#BOD OFF, Crystal, Bootloader On
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B100 -U lfuse:w:0xfd:m -U hfuse:w:0xdf:m -U efuse:w:0xf8:m
+
 
 # Program the device.
 flash: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B2 $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 
 

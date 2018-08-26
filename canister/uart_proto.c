@@ -65,14 +65,14 @@ void process_uart(void){
         if ( c & UART_OVERRUN_ERROR ){uart0_puts("<!E2 Overrun");}
         if ( c & UART_BUFFER_OVERFLOW ){uart0_puts("<!E3 Overflow");}
         if(buffer_pos <= 1 && (uint8_t)c == 'S'){ //reset on AVRBOOT commnd to enter bootloader
-            set_LED(0xFF,0,0);
+            // set_LED(0xFF,0,0);
             wdt_enable(WDTO_250MS); // Enable Watchdog Timer to give reset
         }
         if ((uint8_t)c == '>'){
         	for(buffer_pos=MAX_COMMAND_LENGTH-1;buffer_pos>0;buffer_pos--){rxBuffer[buffer_pos]=0;}
         	rxBuffer[buffer_pos++]=c;
         }else if((c=='\0'||c=='\r')){
-            set_LED(0xFF,0,0);
+            // set_LED(0xFF,0,0);
         	process_command(buffer_pos);
 	        for(i=0;i<MAX_COMMAND_LENGTH;i++){rxBuffer[i]=0;}
         }else{

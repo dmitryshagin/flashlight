@@ -2,11 +2,9 @@
 DEVICE     = atmega168p
 CLOCK      = 3686400L
 PROGRAMMER = -c usbasp
-OBJECTS    = main.o init.o globals.o uart.o uart_proto.o ds18b20.o onewire.o romsearch.o adc.o
+OBJECTS    = main.o uart.o
 BAUD	   = 3
 PORT       = /dev/tty.wchusbserial1420
-# PORT       = /dev/tty.Battery-Port
-
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B $(BAUD) -v
 
@@ -30,29 +28,8 @@ build:	main.hex main.eep
 flash:	all
 	$(AVRDUDE) -U flash:w:main.hex:i
 
-bootflash:	all
-	#first call is just to cause reset. hack, but working :)
-	# avrdude -c avr109 -p $(DEVICE) -P $(PORT) -b 9600 -q -n -u -s || true
-	avrdude -c avr109 -p $(DEVICE) -P $(PORT) -b 9600 -v -U flash:w:main.hex:i
-
-
-eeprom:	all
-	$(AVRDUDE) -U eeprom:w:main.eep
-
 fuse: all
-	#default:
-	# $(AVRDUDE) -U lfuse:w:0x62:m -U hfuse:w:0xdf:m
-	# $(AVRDUDE) -U efuse:w:0x01:m
-
-	#BOD OFF, WDTOFF 8Mhz
-	# $(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0x01:m
-
-	#BOD OFF, WDTON 8Mhz
-	# $(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xcf:m -U efuse:w:0xf9:m
-
-	#BOD OFF, Crystal, Bootloader On
 	$(AVRDUDE) -U lfuse:w:0xfd:m -U hfuse:w:0xdf:m -U efuse:w:0xf8:m
-
 	
 install: flash fuse
 

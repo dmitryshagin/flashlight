@@ -13,5 +13,8 @@ extern volatile uint8_t is_on;
 extern volatile uint8_t should_on;
 extern volatile uint8_t should_off;
 extern volatile uint8_t adc_ready;
+extern volatile uint8_t window_pos;
+extern volatile uint8_t current_adc_input_idx;
+
 
 #endif

@@ -22,7 +22,7 @@ CLOCK      = 1000000UL
 PROGRAMMER = -c USBasp
 OBJECTS    = main.o
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B10
 
 
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)

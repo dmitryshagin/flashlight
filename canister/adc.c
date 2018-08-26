@@ -6,8 +6,6 @@ volatile uint8_t adc_inputs[] = { 0, 1, 2, 6, 7 }; //outputs to measure [+12.6, 
 volatile uint16_t adc_reads[] = { 0, 0, 0, 0, 0 }; //for internal use
 
 volatile uint16_t adc_window[5][10];
-volatile uint8_t window_pos = 0;
-volatile uint8_t current_adc_input_idx = 0;
 
 ISR(ADC_vect){
 	uint8_t i;
@@ -48,15 +46,27 @@ void get_adc(){
 
 void process_adc(){
 	//skip first several values after truning on;
-	if(!adc_ready){
-		return;
-	}
+	// if(!adc_ready){
+		// return;
+	// }
 
-	//are we charging? 1 bit ~=50ms. We want to terminate at 68*7 = 476mA. So we'll end at 10
-	if(adc_values[4] > adc_values[3] && (adc_values[4] - adc_values[3]) > 10){
+	//are we charging? 1 bit ~=50mA. We want to terminate at 68*7 = 476mA.
+	//So we'll start at 13 (>~650mA) and end at 8 (<~400mA) (to have home hysteresis)
+	if(adc_values[4] < adc_values[3] && (adc_values[3] - adc_values[4]) > 12){
 		is_charging = 1;
 	} else {
-		is_charging = 0;
+		if(is_charging){
+			//just to have some hysteresis
+			if(adc_values[4] > adc_values[3]){
+				is_charging = 0;
+			}else{
+				if((adc_values[3] - adc_values[4]) < 9){
+					is_charging = 0;
+				}	
+			}
+		}
+		if(adc_values[4] > adc_values[3]){
+			is_charging = 0;
+		}
 	}
-	//TODO: what should we do with our shiny ADC data? Switch led os stull like that?
 }
