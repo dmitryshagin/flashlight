@@ -141,6 +141,8 @@ void turn_off(){
 	PRR |= (1 << PRUSART0) | (1 << PRADC); //disable uart & adc
 	PORTB &= ~(1 << PB0);//deinit DS18B20
 	DDRB &= ~(1 << PB0);//deinit DS18B20
+	DDRD &= ~(1 << PD5); // BT reset pin -> input - deiniting
+	BT_RESET_LOW;
 	set_LED(0,0,0);
 	PORTB &= ~(1 << PB3); // Remove pullup for overcurent input pin to reduce power consumption
 	OUT_OFF;
