@@ -79,6 +79,7 @@ void process_state(){
 		if(!is_on){
 			turn_on();
 			set_LED(0,0xFF,0);
+			_delay_ms(500);
 			clear_int0_pin();
 		}
 	}
@@ -86,6 +87,10 @@ void process_state(){
 	if(should_off){
 		if(is_on){
 			set_LED(0,0,0);
+			OUT_OFF;
+			cli();
+			_delay_ms(500);
+			sei();
 			clear_int0_pin();
 			turn_off();
 		}

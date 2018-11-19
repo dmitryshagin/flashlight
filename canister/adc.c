@@ -53,7 +53,9 @@ void process_adc(){
 	//are we charging? 1 bit ~=50mA. We want to terminate at 68*7 = 476mA.
 	//So we'll start at 13 (>~650mA) and end at 8 (<~400mA) (to have home hysteresis)
 	if(adc_values[4] < adc_values[3] && (adc_values[3] - adc_values[4]) > 12){
-		is_charging = 1;
+		if(global_counter > 200){ //2s on startup delay before any blinking after start
+			is_charging = 1;
+		}
 	} else {
 		if(is_charging){
 			//just to have some hysteresis

@@ -19,19 +19,15 @@ static void reply_P(const char *addr){
     uart0_putc(c);
 }
 
-static void reply_OK(){
-    reply_P(PSTR("<OK\n\r"));
+static uint8_t reply_version(){
+    reply_P(PSTR("<HW:5.6, SW:0.1\n\r"));
+    return 0;
 }
 
 static uint8_t reply_with_status(){
     char _tmpstr[UART_TX0_BUFFER_SIZE];
     sprintf(_tmpstr, "< %04d, %04d, %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature);
     uart0_puts(_tmpstr);
-    return 0;
-}
-
-static uint8_t temp_to_test(){
-    reply_OK();
     return 0;
 }
 
@@ -45,11 +41,11 @@ static uint8_t process_command(uint16_t buffer_pos){
         return 0;
     }
     if(rxBuffer[1]=='S'){
-        if((strcmp(pch,">SB"))==0){ //Set something useful. Just for test
-            return temp_to_test(pch);
-        }
+        //bye-bye, se'll never get here, we're already rebooting.
     }else if((strcmp(pch,">?"))==0){ //Get current status
     	return reply_with_status();
+    }else if((strcmp(pch,">V"))==0){ //Get current version
+        return reply_version();
     }
   }
   return 0;
@@ -65,7 +61,7 @@ void process_uart(void){
         if ( c & UART_OVERRUN_ERROR ){uart0_puts("<!E2 Overrun");}
         if ( c & UART_BUFFER_OVERFLOW ){uart0_puts("<!E3 Overflow");}
         if(buffer_pos <= 1 && (uint8_t)c == 'S'){ //reset on AVRBOOT commnd to enter bootloader
-            // set_LED(0xFF,0,0);
+            set_LED(0,0,0xFF);
             wdt_enable(WDTO_250MS); // Enable Watchdog Timer to give reset
         }
         if ((uint8_t)c == '>'){

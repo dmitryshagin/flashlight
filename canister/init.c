@@ -14,7 +14,7 @@ ISR(TIMER2_OVF_vect){ // ~100Hz
 ISR(INT0_vect){
 	cli();
 
-	// EIFR = 0b00000011;//lets clear interrupt flags
+	EIFR = 0b00000011;//lets clear interrupt flags
 	
 	_delay_ms(1);
 	if(PIND & (1<<PIND2)){ //will ignore very short pulses
@@ -40,7 +40,7 @@ ISR(INT1_vect){ //external power is on!
 		sei();
 		return;
 	}
-	// EIFR = 0b00000011;//lets clear interrupt flags
+	EIFR = 0b00000011;//lets clear interrupt flags
 	EIMSK &= ~(1<<1); //turn off int1. will reenable before sleep
 	should_on = 1;
 	should_off = 0;
@@ -148,7 +148,6 @@ void turn_off(){
 	OUT_OFF;
 	LDO_OFF;
 	MEASURE_OFF;
-
 	EIMSK |= (1<<0);
 	EIMSK |= (1<<1);
 	sei();
