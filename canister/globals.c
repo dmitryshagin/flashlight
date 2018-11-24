@@ -12,4 +12,4 @@ volatile uint8_t should_off = 0;
 volatile uint8_t adc_ready = 0;
 volatile uint8_t window_pos = 0;
 volatile uint8_t current_adc_input_idx = 0;
-
+volatile uint16_t fram_position = 0;

@@ -1,6 +1,7 @@
 #include "uart_proto.h"
 #include "init.h"
 #include "uart.h"
+#include "i2c.h"
 #include <string.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
@@ -9,8 +10,7 @@
 
 
 uint8_t buffer_pos=0;
-
-
+static char txBuffer[UART_TX0_BUFFER_SIZE];
 static char rxBuffer[MAX_COMMAND_LENGTH];
 
 static void reply_P(const char *addr){
@@ -24,10 +24,20 @@ static uint8_t reply_version(){
     return 0;
 }
 
+static uint8_t reply_data(){
+    uint32_t data;
+    uint16_t i;
+    for(i = 0; i < 512; i++){
+        data = fram_read((fram_position + i) % 512);
+        sprintf(txBuffer, "<D%03d%08lX\n\r", i, data);
+        uart0_puts(txBuffer);
+    }
+    return 0;
+}
+
 static uint8_t reply_with_status(){
-    char _tmpstr[UART_TX0_BUFFER_SIZE];
-    sprintf(_tmpstr, "< %04d, %04d, %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature);
-    uart0_puts(_tmpstr);
+    sprintf(txBuffer, "< %04d, %04d, %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature);
+    uart0_puts(txBuffer);
     return 0;
 }
 
@@ -46,6 +56,8 @@ static uint8_t process_command(uint16_t buffer_pos){
     	return reply_with_status();
     }else if((strcmp(pch,">V"))==0){ //Get current version
         return reply_version();
+    }else if((strcmp(pch,">D"))==0){ //Get data logs
+        return reply_data();
     }
   }
   return 0;

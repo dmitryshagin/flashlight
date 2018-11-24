@@ -1,9 +1,10 @@
 
 DEVICE     = atmega168p
 CLOCK      = 3686400L
-PROGRAMMER = -c usbasp
-OBJECTS    = main.o init.o globals.o uart.o uart_proto.o ds18b20.o onewire.o romsearch.o adc.o
-BAUD	   = 3
+#PROGRAMMER = -c usbasp
+PROGRAMMER = -c dragon_isp
+OBJECTS    = main.o init.o globals.o uart.o uart_proto.o ds18b20.o onewire.o romsearch.o adc.o i2c.o
+BAUD	   = 50 #3
 PORT       = /dev/tty.wchusbserial1420
 # PORT       = /dev/tty.Battery-Port
 

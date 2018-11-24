@@ -15,6 +15,6 @@ extern volatile uint8_t should_off;
 extern volatile uint8_t adc_ready;
 extern volatile uint8_t window_pos;
 extern volatile uint8_t current_adc_input_idx;
-
+extern volatile uint16_t fram_position;
 
 #endif

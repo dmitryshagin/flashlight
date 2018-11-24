@@ -8,6 +8,7 @@
 #include "adc.h"
 #include "uart.h"
 #include "uart_proto.h"
+#include "i2c.h"
 
 //910 - 12.230V
 // 1 LSB ADC ~= 0,01343956044V
@@ -16,6 +17,8 @@
 #define LOW_LIMIT 744
 #define MEDIUM_LIMIT 804
 #define HYSTERESIS 2
+
+uint32_t last_stored_at;
 
 void process_LED(){
 	if( is_on ){ //Is output on?
@@ -102,6 +105,21 @@ void process_state(){
 	}
 }
 
+uint32_t compress_data_for_fram(){
+	//first 10 bits - voltage (ADC0)
+	//second 10 bits - current (reference adc - current adc)
+	//last 12 bits - temperature * 16
+	uint32_t current;
+	if(adc_values[3] + 512 < adc_values[4]){
+		current = 0;
+	}else{
+		current = (adc_values[3] + 512 - adc_values[4]);
+	}
+	return (((uint32_t)adc_values[0] & 0x3FF) << 22) |
+		   ((current & 0x3FF) << 12) |
+		   (temperature & 0xFFF);
+}
+
 int main(void){
 	init();
 
@@ -120,6 +138,18 @@ int main(void){
 		}
 		
 		if(last_processed_counter != global_counter){
+			//once a minute
+			if(global_counter - last_stored_at > 6000){
+				wdt_enable(WDTO_250MS);
+				fram_write(fram_position, compress_data_for_fram());
+				reset_wdt();
+
+				fram_position++;
+				if(fram_position > 0x1FF){
+					fram_position = 0;
+				}
+				last_stored_at = global_counter;
+			}
 			last_processed_counter = global_counter;
 		}
 	};
