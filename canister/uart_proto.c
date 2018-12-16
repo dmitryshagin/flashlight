@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
+#include <util/delay.h>
 
 #define MAX_COMMAND_LENGTH UART_RX0_BUFFER_SIZE
 
@@ -20,7 +21,7 @@ static void reply_P(const char *addr){
 }
 
 static uint8_t reply_version(){
-    reply_P(PSTR("<HW:5.6, SW:0.1\n\r"));
+    reply_P(PSTR("<HW:5.6, SW:0.1.2\n\r"));
     return 0;
 }
 
@@ -28,15 +29,17 @@ static uint8_t reply_data(){
     uint32_t data;
     uint16_t i;
     for(i = 0; i < 512; i++){
+        wdt_reset();
         data = fram_read((fram_position + i) % 512);
         sprintf(txBuffer, "<D%03d%08lX\n\r", i, data);
         uart0_puts(txBuffer);
+        _delay_ms(10);
     }
     return 0;
 }
 
 static uint8_t reply_with_status(){
-    sprintf(txBuffer, "< %04d, %04d, %04d, %04d, %04d, %04d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature);
+    sprintf(txBuffer, "< %04d, %04d, %04d, %04d, %04d, %04d, %01d\n\r", adc_values[0], adc_values[1], adc_values[2], adc_values[3], adc_values[4], temperature, is_leaking);
     uart0_puts(txBuffer);
     return 0;
 }
@@ -51,6 +54,9 @@ static uint8_t process_command(uint16_t buffer_pos){
         return 0;
     }
     if(rxBuffer[1]=='S'){
+        set_LED(0,0,0xFF);
+        reset_wdt();
+        wdt_enable(WDTO_250MS);
         //bye-bye, se'll never get here, we're already rebooting.
     }else if((strcmp(pch,">?"))==0){ //Get current status
     	return reply_with_status();
@@ -73,7 +79,10 @@ void process_uart(void){
         if ( c & UART_OVERRUN_ERROR ){uart0_puts("<!E2 Overrun");}
         if ( c & UART_BUFFER_OVERFLOW ){uart0_puts("<!E3 Overflow");}
         if(buffer_pos <= 1 && (uint8_t)c == 'S'){ //reset on AVRBOOT commnd to enter bootloader
+            reply_P(PSTR("<REBOOT\n\r"));
+            wanna_reboot = 1;
             set_LED(0,0,0xFF);
+            reset_wdt();
             wdt_enable(WDTO_250MS); // Enable Watchdog Timer to give reset
         }
         if ((uint8_t)c == '>'){

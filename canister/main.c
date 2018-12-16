@@ -68,10 +68,17 @@ void process_LED(){
 	}
 }
 
+ISR(WDT_vect)
+{
+	if(!is_on){
+		MCUSR &= ~(1<<WDRF);
+		turn_off();
+	}
+}
+
+
 void clear_int0_pin(){
-	wdt_enable(WDTO_4S);
 	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
-	reset_wdt();
 	should_off = 0;
 	should_on = 0;
 	EIMSK |= (1<<0);
@@ -108,7 +115,8 @@ void process_state(){
 uint32_t compress_data_for_fram(){
 	//first 10 bits - voltage (ADC0)
 	//second 10 bits - current (reference adc - current adc)
-	//last 12 bits - temperature * 16
+	//next 11 bits - temperature * 16
+	//last bit - leakage
 	uint32_t current;
 	if(adc_values[3] + 512 < adc_values[4]){
 		current = 0;
@@ -117,7 +125,8 @@ uint32_t compress_data_for_fram(){
 	}
 	return (((uint32_t)adc_values[0] & 0x3FF) << 22) |
 		   ((current & 0x3FF) << 12) |
-		   (temperature & 0xFFF);
+		   ((temperature & 0xFFF >> 1) << 1) |
+		   (is_leaking & 0x1);
 }
 
 int main(void){
@@ -140,9 +149,7 @@ int main(void){
 		if(last_processed_counter != global_counter){
 			//once a minute
 			if(global_counter - last_stored_at > 6000){
-				wdt_enable(WDTO_250MS);
 				fram_write(fram_position, compress_data_for_fram());
-				reset_wdt();
 
 				fram_position++;
 				if(fram_position > 0x1FF){
@@ -151,6 +158,9 @@ int main(void){
 				last_stored_at = global_counter;
 			}
 			last_processed_counter = global_counter;
+		}
+		if(!wanna_reboot){
+			wdt_reset();
 		}
 	};
 	return 0;	

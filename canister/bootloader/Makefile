@@ -217,6 +217,7 @@ endif
 # to get a full listing.
 #
 AVRDUDE_PROGRAMMER = USBasp
+# AVRDUDE_PROGRAMMER = dragon_isp
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 # AVRDUDE_PORT = com1    # programmer connected to serial device
@@ -383,7 +384,7 @@ fuse: all
 
 # Program the device.
 flash: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -B2 $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B50 $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 
 

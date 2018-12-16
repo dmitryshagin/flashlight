@@ -160,6 +160,8 @@ void turn_off(){
 
 void init(){
 	reset_wdt();
+	wdt_enable(WDTO_2S);
+	WDTCSR |= _BV(WDIE);
 	init_LED();
 	interrupts_init();
 
