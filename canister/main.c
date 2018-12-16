@@ -133,7 +133,7 @@ int main(void){
 	init();
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	turn_off();
+	turn_on();
 
 	for(;;){
 		if(!wanna_reboot){
