@@ -14,3 +14,4 @@ volatile uint8_t window_pos = 0;
 volatile uint8_t current_adc_input_idx = 0;
 volatile uint16_t fram_position = 0;
 volatile uint8_t wanna_reboot = 0;
+volatile uint32_t last_data_at = 0;

@@ -125,7 +125,7 @@ uint32_t compress_data_for_fram(){
 	}
 	return (((uint32_t)adc_values[0] & 0x3FF) << 22) |
 		   ((current & 0x3FF) << 12) |
-		   ((temperature & 0xFFF >> 1) << 1) |
+		   (((temperature & 0xFFF) >> 1) << 1) |
 		   (is_leaking & 0x1);
 }
 
@@ -136,30 +136,31 @@ int main(void){
 	turn_off();
 
 	for(;;){
-		process_state();
-		process_leakage();
-		process_uart();
-		get_adc();
-		process_adc();
-		process_temperature();
-		if(adc_ready){
-			process_LED();
-		}
-		
-		if(last_processed_counter != global_counter){
-			//once a minute
-			if(global_counter - last_stored_at > 6000){
-				fram_write(fram_position, compress_data_for_fram());
-
-				fram_position++;
-				if(fram_position > 0x1FF){
-					fram_position = 0;
-				}
-				last_stored_at = global_counter;
-			}
-			last_processed_counter = global_counter;
-		}
 		if(!wanna_reboot){
+			process_state();
+			process_leakage();
+			process_uart();
+			get_adc();
+			process_adc();
+			process_temperature();
+			if(adc_ready){
+				process_LED();
+			}
+			
+			if(last_processed_counter != global_counter){
+				//once a minute
+				if(global_counter - last_stored_at > 6000){
+					fram_write(fram_position, compress_data_for_fram());
+
+					fram_position++;
+					if(fram_position > 0x1FF){
+						fram_position = 0;
+					}
+					last_stored_at = global_counter;
+				}
+				last_processed_counter = global_counter;
+			}
+		
 			wdt_reset();
 		}
 	};

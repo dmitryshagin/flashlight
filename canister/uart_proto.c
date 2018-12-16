@@ -33,7 +33,7 @@ static uint8_t reply_data(){
         data = fram_read((fram_position + i) % 512);
         sprintf(txBuffer, "<D%03d%08lX\n\r", i, data);
         uart0_puts(txBuffer);
-        _delay_ms(10);
+        _delay_ms(5);
     }
     return 0;
 }
@@ -73,6 +73,9 @@ void process_uart(void){
 	int c;
 	uint8_t i;
 	c = uart0_getc();
+    if(global_counter - last_data_at > 5){
+        buffer_pos = 0;
+    }//50 ms timeout btween symbols should be more than enough
     if ( !(c & UART_NO_DATA) )
     {
         if ( c & UART_FRAME_ERROR ){uart0_puts("<!E1 Frame");}
@@ -98,5 +101,6 @@ void process_uart(void){
         if(buffer_pos==MAX_COMMAND_LENGTH){ //reset buffer on erraty command
         	for(buffer_pos=MAX_COMMAND_LENGTH-1;buffer_pos>0;buffer_pos--){rxBuffer[buffer_pos]=0;}
         }
+        last_data_at = global_counter;
     }
 }
