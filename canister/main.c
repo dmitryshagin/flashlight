@@ -68,10 +68,10 @@ void process_LED(){
 	}
 }
 
-ISR(WDT_vect)
-{
+ISR(WDT_vect){
+	MCUSR &= ~(1<<WDRF);
+
 	if(!is_on){
-		MCUSR &= ~(1<<WDRF);
 		turn_off();
 	}
 }
@@ -133,10 +133,11 @@ int main(void){
 	init();
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	turn_on();
+	should_on = 1;
 
 	for(;;){
 		if(!wanna_reboot){
+			WDTCSR |= _BV(WDIE);
 			process_state();
 			process_leakage();
 			process_uart();
@@ -160,7 +161,6 @@ int main(void){
 				}
 				last_processed_counter = global_counter;
 			}
-		
 			wdt_reset();
 		}
 	};

@@ -95,9 +95,11 @@ void init_adc(){
 
 void reset_wdt(){
 	wdt_reset();
-	MCUSR = 0;
+	MCUSR &= ~(1<<WDRF);
+	cli();
     WDTCSR |= _BV(WDCE) | _BV(WDE);
     WDTCSR = 0;
+    sei();
 	wdt_disable();
 }
 
@@ -152,6 +154,7 @@ void turn_off(){
 	MEASURE_OFF;
 	EIMSK |= (1<<0);
 	EIMSK |= (1<<1);
+	WDTCSR |= _BV(WDIE);
 	sei();
 	sleep_mode();
 }
@@ -160,8 +163,11 @@ void turn_off(){
 
 void init(){
 	reset_wdt();
-	wdt_enable(WDTO_2S);
+	wdt_enable(WDTO_4S);
 	WDTCSR |= _BV(WDIE);
+
+	cli();
+
 	init_LED();
 	interrupts_init();
 

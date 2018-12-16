@@ -53,12 +53,7 @@ static uint8_t process_command(uint16_t buffer_pos){
     if(buffer_pos<2){
         return 0;
     }
-    if(rxBuffer[1]=='S'){
-        set_LED(0,0,0xFF);
-        reset_wdt();
-        wdt_enable(WDTO_250MS);
-        //bye-bye, se'll never get here, we're already rebooting.
-    }else if((strcmp(pch,">?"))==0){ //Get current status
+    if((strcmp(pch,">?"))==0){ //Get current status
     	return reply_with_status();
     }else if((strcmp(pch,">V"))==0){ //Get current version
         return reply_version();
