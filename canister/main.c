@@ -69,6 +69,7 @@ void process_LED(){
 }
 
 ISR(WDT_vect){
+	cli();
 	MCUSR &= ~(1<<WDRF);
 
 	if(!is_on){
@@ -133,7 +134,7 @@ int main(void){
 	init();
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	should_on = 1;
+	turn_off();
 
 	for(;;){
 		if(!wanna_reboot){
