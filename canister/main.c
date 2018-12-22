@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <avr/sleep.h>
@@ -68,16 +69,6 @@ void process_LED(){
 	}
 }
 
-ISR(WDT_vect){
-	cli();
-	MCUSR &= ~(1<<WDRF);
-
-	if(!is_on){
-		turn_off();
-	}
-}
-
-
 void clear_int0_pin(){
 	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
 	should_off = 0;
@@ -132,13 +123,17 @@ uint32_t compress_data_for_fram(){
 
 int main(void){
 	init();
+	fram_position = eeprom_read_word((uint8_t*)0);
+	if(fram_position > 0x1FF){
+		fram_position = 0;
+	}
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	turn_off();
+	should_on = 1;
 
 	for(;;){
 		if(!wanna_reboot){
-			WDTCSR |= _BV(WDIE);
+			wdt_reset();
 			process_state();
 			process_leakage();
 			process_uart();
@@ -162,7 +157,6 @@ int main(void){
 				}
 				last_processed_counter = global_counter;
 			}
-			wdt_reset();
 		}
 	};
 	return 0;	

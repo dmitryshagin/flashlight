@@ -132,6 +132,7 @@ void turn_on(){
 	BT_RESET_HIGH;
 	i2c_init();
 	is_on = 1;
+	wdt_enable(WDTO_4S);
 	sei();
 }
 
@@ -156,6 +157,8 @@ void turn_off(){
 	EIMSK |= (1<<1);
 	WDTCSR |= _BV(WDIE);
 	sei();
+	eeprom_write_word((uint8_t*)0, fram_position);
+	reset_wdt();
 	sleep_mode();
 }
 
@@ -164,7 +167,6 @@ void turn_off(){
 void init(){
 	reset_wdt();
 	wdt_enable(WDTO_4S);
-	WDTCSR |= _BV(WDIE);
 
 	cli();
 
