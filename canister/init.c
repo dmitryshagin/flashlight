@@ -36,11 +36,11 @@ ISR(INT0_vect){
 ISR(INT1_vect){ //external power is on!
 	cli();
 	_delay_ms(200);
+	EIFR = 0b00000011;//lets clear interrupt flags
 	if(PIND & (1<<PIND3)){ //will ignore very short pulses
 		sei();
 		return;
 	}
-	EIFR = 0b00000011;//lets clear interrupt flags
 	EIMSK &= ~(1<<1); //turn off int1. will reenable before sleep
 	should_on = 1;
 	should_off = 0;
@@ -117,6 +117,7 @@ void process_leakage(){
 
 void turn_on(){
 	cli();
+	wdt_enable(WDTO_4S);
 	PRR &= ~(1 << PRUSART0); //reenable uart
 	PRR &= ~(1 << PRADC); //reenable adc
 	init_timer();
@@ -125,14 +126,17 @@ void turn_on(){
 	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
 	PORTB |= (1 << PB3); // Pullup for overcurent input pin
 	LDO_ON;
-	_delay_ms(50); // timeout to settle LDO
+	_delay_ms(5); // timeout to settle
 	OUT_ON;
+	_delay_ms(2); // timeout to settle
 	MEASURE_ON;
+	_delay_ms(2); // timeout to settle
 	DDRD |= (1 << PD5); // BT reset pin -> output
+	_delay_ms(5); // timeout to settle
 	BT_RESET_HIGH;
+	_delay_ms(5); // timeout to settle
 	i2c_init();
 	is_on = 1;
-	wdt_enable(WDTO_4S);
 	sei();
 }
 
@@ -141,6 +145,7 @@ void turn_off(){
 	UCSR0B = 0;	//deinit UART
 	is_on = 0;
 	global_counter = 0;
+	last_stored_at = 0;
 	adc_ready = 0;
 	ADCSRA = 0;
 	PRR |= (1 << PRUSART0) | (1 << PRADC); //disable uart & adc
@@ -155,10 +160,9 @@ void turn_off(){
 	MEASURE_OFF;
 	EIMSK |= (1<<0);
 	EIMSK |= (1<<1);
-	WDTCSR |= _BV(WDIE);
-	sei();
 	eeprom_write_word((uint8_t*)0, fram_position);
 	reset_wdt();
+	sei();
 	sleep_mode();
 }
 

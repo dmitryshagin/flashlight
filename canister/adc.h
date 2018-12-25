@@ -4,6 +4,7 @@
 #include <avr/io.h>
 #include "init.h"
 
+void read_next_adc();
 void get_adc();
 
 void process_adc();

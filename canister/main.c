@@ -19,8 +19,6 @@
 #define MEDIUM_LIMIT 804
 #define HYSTERESIS 2
 
-uint32_t last_stored_at;
-
 void process_LED(){
 	if( is_on ){ //Is output on?
 		if(is_leaking){
@@ -77,11 +75,13 @@ void clear_int0_pin(){
 }
 
 void process_state(){
+	uint8_t i;
 	if(should_on){
 		if(!is_on){
 			turn_on();
-			set_LED(0,0xFF,0);
-			_delay_ms(500);
+			wdt_reset();
+			wdt_enable(WDTO_4S);
+			for(i = 0; i < 50; i++){ read_next_adc(); };
 			clear_int0_pin();
 		}
 	}
@@ -91,7 +91,7 @@ void process_state(){
 			set_LED(0,0,0);
 			OUT_OFF;
 			cli();
-			_delay_ms(500);
+			_delay_ms(50);
 			sei();
 			clear_int0_pin();
 			turn_off();

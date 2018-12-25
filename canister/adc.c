@@ -8,6 +8,10 @@ volatile uint16_t adc_reads[] = { 0, 0, 0, 0, 0 }; //for internal use
 volatile uint16_t adc_window[5][10];
 
 ISR(ADC_vect){
+	read_next_adc();
+}
+
+void read_next_adc(){
 	uint8_t i;
 	uint32_t avg_data = 0;
 
@@ -45,11 +49,6 @@ void get_adc(){
 }
 
 void process_adc(){
-	//skip first several values after truning on;
-	// if(!adc_ready){
-		// return;
-	// }
-
 	//are we charging? 1 bit ~=50mA. We want to terminate at 68*7 = 476mA.
 	//So we'll start at 13 (>~650mA) and end at 8 (<~400mA) (to have home hysteresis)
 	if(adc_values[4] < adc_values[3] && (adc_values[3] - adc_values[4]) > 12){
