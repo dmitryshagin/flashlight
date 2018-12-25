@@ -112,16 +112,14 @@ void turn_on(){
 	ds18b20wsp( &PORTB, &DDRB, &PINB, ( 1 << 0 ), NULL, -50, 80, DS18B20_RES12 );
 	PORTB |= (1 << PB3); // Pullup for overcurent input pin
 	LDO_ON;
-	_delay_ms(5); // timeout to settle
 	OUT_ON;
 	MEASURE_ON;
-	_delay_ms(2); // timeout to settle
 	DDRD |= (1 << PD5); // BT reset pin -> output
 	BT_RESET_HIGH;
-	_delay_ms(5); // timeout to settle
 	i2c_init();
 	is_on = 1;
-	for(i = 0; i < 50; i++){ read_next_adc(); };
+	// for(i = 0; i < 50; i++){ read_next_adc(); };
+	set_LED(0x32, 0x32, 0x32);
 	sei();
 }
 

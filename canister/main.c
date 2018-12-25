@@ -75,7 +75,8 @@ void process_state(){
 	if(interrupt_triggered || should_on){
 		if(is_on){
 			turn_off();
-		}else{
+		}
+		if(!is_on){ //do not set ELSE here - it will work WRONG after interrupt
 			turn_on();
 		}
 		interrupt_triggered = 0;
