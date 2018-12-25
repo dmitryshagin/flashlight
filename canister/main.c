@@ -67,36 +67,21 @@ void process_LED(){
 	}
 }
 
-void clear_int0_pin(){
-	while(!(PIND & (1<<PIND2))){_delay_ms(25);}
-	should_off = 0;
-	should_on = 0;
-	EIMSK |= (1<<0);
-}
-
 void process_state(){
-	uint8_t i;
-	if(should_on){
-		if(!is_on){
+	if(!interrupt_triggered){
+		while(!(PIND & (1<<PIND2))){_delay_ms(1);}
+		EIMSK |= (1<<0);
+	}
+	if(interrupt_triggered || should_on){
+		if(is_on){
+			turn_off();
+		}else{
 			turn_on();
-			wdt_reset();
-			wdt_enable(WDTO_4S);
-			for(i = 0; i < 50; i++){ read_next_adc(); };
-			clear_int0_pin();
 		}
+		interrupt_triggered = 0;
+		should_on = 0;
 	}
 
-	if(should_off){
-		if(is_on){
-			set_LED(0,0,0);
-			OUT_OFF;
-			cli();
-			_delay_ms(50);
-			sei();
-			clear_int0_pin();
-			turn_off();
-		}
-	}
 	if(is_on){
 		if(!(PINB & (1<<PB3))){ //Emergency condition - overcurrent!
 			turn_off();
@@ -130,6 +115,7 @@ int main(void){
 
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	should_on = 1;
+	sei();
 
 	for(;;){
 		if(!wanna_reboot){

@@ -12,40 +12,25 @@ ISR(TIMER2_OVF_vect){ // ~100Hz
 }
 
 ISR(INT0_vect){
-	cli();
-
-	EIFR = 0b00000011;//lets clear interrupt flags
-	
-	_delay_ms(1);
-	if(PIND & (1<<PIND2)){ //will ignore very short pulses
-		sei();
-		return;
-	}
-	EIMSK &= ~(1<<0);
-
 	if(is_on){
-		should_on = 0;
-		should_off = 1;
-	}else{
-		should_off = 0;
-		should_on = 1;
+		_delay_ms(10);
+		if(PIND & (1<<PIND2)){ //will ignore very short pulses
+			return;
+		}
 	}
-	sei();
+	interrupt_triggered = 1;
+	EIMSK &= ~(1<<0);
 }
 
 ISR(INT1_vect){ //external power is on!
-	cli();
 	_delay_ms(200);
 	EIFR = 0b00000011;//lets clear interrupt flags
 	if(PIND & (1<<PIND3)){ //will ignore very short pulses
-		sei();
 		return;
 	}
 	EIMSK &= ~(1<<1); //turn off int1. will reenable before sleep
 	should_on = 1;
-	should_off = 0;
 	_delay_ms(2);
-	sei();
 }
 
 
@@ -96,10 +81,8 @@ void init_adc(){
 void reset_wdt(){
 	wdt_reset();
 	MCUSR &= ~(1<<WDRF);
-	cli();
     WDTCSR |= _BV(WDCE) | _BV(WDE);
     WDTCSR = 0;
-    sei();
 	wdt_disable();
 }
 
@@ -116,8 +99,11 @@ void process_leakage(){
 }
 
 void turn_on(){
+	uint8_t i;
 	cli();
+	wdt_reset();
 	wdt_enable(WDTO_4S);
+	wdt_reset();
 	PRR &= ~(1 << PRUSART0); //reenable uart
 	PRR &= ~(1 << PRADC); //reenable adc
 	init_timer();
@@ -128,20 +114,20 @@ void turn_on(){
 	LDO_ON;
 	_delay_ms(5); // timeout to settle
 	OUT_ON;
-	_delay_ms(2); // timeout to settle
 	MEASURE_ON;
 	_delay_ms(2); // timeout to settle
 	DDRD |= (1 << PD5); // BT reset pin -> output
-	_delay_ms(5); // timeout to settle
 	BT_RESET_HIGH;
 	_delay_ms(5); // timeout to settle
 	i2c_init();
 	is_on = 1;
+	for(i = 0; i < 50; i++){ read_next_adc(); };
 	sei();
 }
 
 void turn_off(){
 	cli();
+	wdt_reset();
 	UCSR0B = 0;	//deinit UART
 	is_on = 0;
 	global_counter = 0;
@@ -160,8 +146,14 @@ void turn_off(){
 	MEASURE_OFF;
 	EIMSK |= (1<<0);
 	EIMSK |= (1<<1);
+	EIFR = 0b00000011;//lets clear interrupt flags
 	eeprom_write_word((uint8_t*)0, fram_position);
-	reset_wdt();
+	_delay_ms(20);
+	while(!(PIND & (1<<PIND2))){_delay_ms(1);}
+	MCUSR &= ~(1<<WDRF);
+    WDTCSR |= _BV(WDCE) | _BV(WDE);
+    WDTCSR = 0;
+	wdt_disable();
 	sei();
 	sleep_mode();
 }
@@ -172,14 +164,10 @@ void init(){
 	reset_wdt();
 	wdt_enable(WDTO_4S);
 
-	cli();
-
 	init_LED();
 	interrupts_init();
 
 	DDRB |= (1 << PB4); // Current Measure ouput pin -> output
 	DDRB |= (1 << PB5); // Main Output pin -> output
 	DDRD |= (1 << PD7); // LDO control output pin -> output
-	
-	sei();
 }
