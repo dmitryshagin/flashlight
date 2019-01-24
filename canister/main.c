@@ -85,7 +85,10 @@ void process_state(){
 
 	if(is_on){
 		if(!(PINB & (1<<PB3))){ //Emergency condition - overcurrent!
-			turn_off();
+			_delay_ms(100);
+			if(!(PINB & (1<<PB3))){
+				turn_off();
+			}
 		}
 	}
 }

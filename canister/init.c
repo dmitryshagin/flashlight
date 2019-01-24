@@ -12,12 +12,12 @@ ISR(TIMER2_OVF_vect){ // ~100Hz
 }
 
 ISR(INT0_vect){
-	if(is_on){
-		_delay_ms(10);
-		if(PIND & (1<<PIND2)){ //will ignore very short pulses
-			return;
-		}
-	}
+	// if(is_on){ //commented out due to possible hanging
+	// 	_delay_ms(10);
+	// 	if(PIND & (1<<PIND2)){ //will ignore very short pulses
+	// 		return;
+	// 	}
+	// }
 	interrupt_triggered = 1;
 	EIMSK &= ~(1<<0);
 }
