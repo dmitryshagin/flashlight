@@ -18,6 +18,7 @@ ISR(INT0_vect){
 	// 		return;
 	// 	}
 	// }
+	button_pressed_for = 0;
 	interrupt_triggered = 1;
 	EIMSK &= ~(1<<0);
 }

@@ -16,3 +16,4 @@ volatile uint8_t wanna_reboot = 0;
 volatile uint32_t last_data_at = 0;
 volatile uint32_t last_stored_at = 0;
 volatile uint8_t interrupt_triggered = 0;
+volatile uint16_t button_pressed_for = 0;

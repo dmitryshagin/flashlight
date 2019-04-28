@@ -19,6 +19,7 @@
 #define MEDIUM_LIMIT 804
 #define HYSTERESIS 2
 
+
 void process_LED(){
 	if( is_on ){ //Is output on?
 		if(is_leaking){
@@ -74,10 +75,22 @@ void process_state(){
 	}
 	if(interrupt_triggered || should_on){
 		if(is_on){
-			turn_off();
+			while(!(PIND & (1<<PIND2)) && button_pressed_for < 50){
+				button_pressed_for +=1;
+				_delay_ms(1);
+			}
+			if(button_pressed_for > 25){
+				turn_off();
+			}
 		}
 		if(!is_on){ //do not set ELSE here - it will work WRONG after interrupt
-			turn_on();
+			while(!(PIND & (1<<PIND2)) && button_pressed_for < 50){
+				button_pressed_for +=1;
+				_delay_ms(1);
+			}
+			if(button_pressed_for > 25 || should_on){
+				turn_on();
+			}
 		}
 		interrupt_triggered = 0;
 		should_on = 0;

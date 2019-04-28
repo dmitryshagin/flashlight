@@ -18,5 +18,6 @@ extern volatile uint8_t wanna_reboot;
 extern volatile uint32_t last_data_at;
 extern volatile uint32_t last_stored_at;
 extern volatile uint8_t interrupt_triggered;
+extern volatile uint16_t button_pressed_for;
 
 #endif
