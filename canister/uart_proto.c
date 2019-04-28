@@ -21,7 +21,7 @@ static void reply_P(const char *addr){
 }
 
 static uint8_t reply_version(){
-    reply_P(PSTR("<HW:5.6, SW:0.1.9\n\r"));
+    reply_P(PSTR("<HW:5.6, SW:0.2.0\n\r"));
     return 0;
 }
 
